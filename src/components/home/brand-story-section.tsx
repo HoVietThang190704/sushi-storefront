@@ -1,74 +1,88 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { SafeImage } from "@/components/ui/safe-image";
 
-function useScrollReveal(threshold = 0.12) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [isRevealed, setIsRevealed] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!ref.current) return;
-
-    // Check if user prefers reduced motion
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) {
-      setIsRevealed(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsRevealed(true);
-          observer.disconnect(); // One-shot trigger to save CPU & memory
-        }
-      },
-      {
-        threshold,
-        rootMargin: "0px 0px -40px 0px",
-      }
-    );
-
-    observer.observe(ref.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [threshold]);
-
-  return { ref, isRevealed };
+interface ValuePillar {
+  index: number;
+  title: string;
+  description: string;
+  delayClass: string;
 }
 
+const VALUE_PILLARS: ValuePillar[] = [
+  {
+    index: 1,
+    title: "Nguyên vật liệu hải sản tươi sống cao cấp",
+    description:
+      "Cá hồi Na Uy, cá ngừ đại dương nhập mới hàng ngày, gạo Nhật dẻo thơm hòa quyện cùng giấm ủ truyền thống.",
+    delayClass: "delay-75",
+  },
+  {
+    index: 2,
+    title: "Bảo quản chuẩn nhiệt độ cho đơn Take Away",
+    description:
+      "Quy trình giữ lạnh chuyên dụng và khay hộp chuyên biệt bảo vệ cấu trúc hạt cơm cùng độ béo ngọt của cá.",
+    delayClass: "delay-150",
+  },
+  {
+    index: 3,
+    title: "Trải nghiệm vị giác hài hòa theo triết lý Nhật",
+    description:
+      "Mỗi hộp sushi bài trí cân đối theo triết lý ngũ sắc, đem lại bữa ăn tinh tế, dinh dưỡng và ngon miệng.",
+    delayClass: "delay-225",
+  },
+];
+
+interface CraftTile {
+  src: string;
+  alt: string;
+  caption: string;
+  delayClass: string;
+}
+
+const CRAFT_TILES: CraftTile[] = [
+  {
+    src: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=80",
+    alt: "Khay sushi cuộn Maki Roll tổng hợp tươi ngon",
+    caption: "Khay Maki Roll tổng hợp",
+    delayClass: "delay-150",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=800&q=80",
+    alt: "Đĩa sushi nigiri hải sản tươi trên đá đen",
+    caption: "Set Nigiri hải sản đá đen",
+    delayClass: "delay-250",
+  },
+];
+
 export function BrandStorySection() {
-  const topStory = useScrollReveal(0.1);
-  const bottomCraft = useScrollReveal(0.1);
+  const [topStoryRef, isTopStoryRevealed] = useScrollReveal(0.1);
+  const [bottomCraftRef, isBottomCraftRevealed] = useScrollReveal(0.1);
 
   return (
     <section className="relative overflow-hidden py-14 md:py-22 bg-background border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Top Split: Red Statement Card + Editorial Narrative (Image 2) */}
+        {/* ===================== KHỐI TRÊN: TRIẾT LÝ & CÂU CHUYỆN ===================== */}
         <div
-          ref={topStory.ref}
+          ref={topStoryRef}
           className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center"
         >
-          {/* Left: Japanese Vermilion Accent Card */}
+          {/* Cột trái: Thẻ đỏ điểm nhấn đặc trưng phong cách Chiyoda */}
           <div
             className={cn(
               "lg:col-span-5 relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 via-red-700 to-red-900 p-6 sm:p-8 text-white shadow-lg shadow-red-950/15 border border-red-500/30",
               "transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-              topStory.isRevealed
+              isTopStoryRevealed
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
             )}
           >
-            {/* Subtle Takumi Artisan Kanji watermark */}
+            {/* Chữ Kanji 'Takumi' (Nghệ nhân) in chìm trang nhã */}
             <div
               className="pointer-events-none absolute -bottom-4 right-0 select-none opacity-10 font-serif text-8xl text-white font-bold"
               aria-hidden="true"
@@ -81,7 +95,6 @@ export function BrandStorySection() {
                 <span>TRIẾT LÝ ẨM THỰC • 料理哲学</span>
               </div>
 
-              {/* Headline with text-balance to avoid orphaned words */}
               <h2 className="mt-4 font-serif text-xl sm:text-2xl font-bold leading-snug tracking-tight text-white text-balance">
                 Hương vị chuẩn Nhật từ nguyên liệu tươi sống chọn lọc
               </h2>
@@ -97,12 +110,12 @@ export function BrandStorySection() {
             </div>
           </div>
 
-          {/* Right: Narrative Story Block */}
+          {/* Cột phải: Đoạn văn kể chuyện & liên kết dẫn tới thực đơn */}
           <div
             className={cn(
               "lg:col-span-7 flex flex-col justify-center space-y-4",
               "transition-all duration-700 delay-150 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-              topStory.isRevealed
+              isTopStoryRevealed
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
             )}
@@ -142,127 +155,70 @@ export function BrandStorySection() {
           </div>
         </div>
 
-        {/* Bottom Split: 3 Value Pillars + 2 Food Photos (Image 3) */}
+        {/* ===================== KHỐI DƯỚI: 3 GIÁ TRỊ CỐT LÕI + 2 ẢNH MÓN ĂN ===================== */}
         <div
-          ref={bottomCraft.ref}
+          ref={bottomCraftRef}
           className="mt-12 lg:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center border-t border-border/60 pt-8"
         >
-          {/* 3 Pillars List */}
+          {/* Cột trái: Danh sách 3 giá trị cốt lõi */}
           <div className="lg:col-span-6 space-y-3">
-            <div
-              className={cn(
-                "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
-                "transition-all duration-600 delay-75 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-                bottomCraft.isRevealed
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-6"
-              )}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
-                  1
-                </span>
-                <h4 className="text-sm font-semibold text-foreground">
-                  Nguyên vật liệu hải sản tươi sống cao cấp
-                </h4>
+            {VALUE_PILLARS.map((pillar) => (
+              <div
+                key={pillar.index}
+                className={cn(
+                  "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
+                  "transition-all duration-600 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                  pillar.delayClass,
+                  isBottomCraftRevealed
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-6"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
+                    {pillar.index}
+                  </span>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {pillar.title}
+                  </h4>
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
+                  {pillar.description}
+                </p>
               </div>
-              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
-                Cá hồi Na Uy, cá ngừ đại dương nhập mới hàng ngày, gạo Nhật dẻo thơm hòa quyện cùng giấm ủ truyền thống.
-              </p>
-            </div>
-
-            <div
-              className={cn(
-                "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
-                "transition-all duration-600 delay-150 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-                bottomCraft.isRevealed
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-6"
-              )}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
-                  2
-                </span>
-                <h4 className="text-sm font-semibold text-foreground">
-                  Bảo quản chuẩn nhiệt độ cho đơn Take Away
-                </h4>
-              </div>
-              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
-                Quy trình giữ lạnh chuyên dụng và khay hộp chuyên biệt bảo vệ cấu trúc hạt cơm cùng độ béo ngọt của cá.
-              </p>
-            </div>
-
-            <div
-              className={cn(
-                "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
-                "transition-all duration-600 delay-225 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-                bottomCraft.isRevealed
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-6"
-              )}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
-                  3
-                </span>
-                <h4 className="text-sm font-semibold text-foreground">
-                  Trải nghiệm vị giác hài hòa theo triết lý Nhật
-                </h4>
-              </div>
-              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
-                Mỗi hộp sushi bài trí cân đối theo triết lý ngũ sắc, đem lại bữa ăn tinh tế, dinh dưỡng và ngon miệng.
-              </p>
-            </div>
+            ))}
           </div>
 
-          {/* 2 Visual Craft Tiles with staggered smooth reveal */}
+          {/* Cột phải: 2 ảnh món ăn nghệ thuật với hiệu ứng hiện dần mượt mà */}
           <div className="lg:col-span-6 grid grid-cols-2 gap-3.5 h-full min-h-[260px]">
-            <div
-              className={cn(
-                "relative rounded-xl overflow-hidden shadow-sm group",
-                "transition-all duration-700 delay-150 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-                bottomCraft.isRevealed
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
-              )}
-            >
-              <Image
-                src="https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=80"
-                alt="Khay sushi cuộn Maki Roll tổng hợp tươi ngon"
-                fill
-                sizes="(max-width: 1024px) 50vw, 25vw"
-                className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
-                <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[11px] font-medium text-stone-100">
-                  Khay Maki Roll tổng hợp
-                </span>
+            {CRAFT_TILES.map((tile) => (
+              <div
+                key={tile.alt}
+                className={cn(
+                  "relative rounded-xl overflow-hidden shadow-sm group min-h-[190px]",
+                  "transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                  tile.delayClass,
+                  isBottomCraftRevealed
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-8"
+                )}
+              >
+                <SafeImage
+                  src={tile.src}
+                  alt={tile.alt}
+                  fill
+                  sizes="(max-width: 1024px) 50vw, 25vw"
+                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  fallbackSrc="/images/placeholder-dish.svg"
+                  fallbackText={tile.caption}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3 z-10 pointer-events-none">
+                  <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[11px] font-medium text-stone-100">
+                    {tile.caption}
+                  </span>
+                </div>
               </div>
-            </div>
-
-            <div
-              className={cn(
-                "relative rounded-xl overflow-hidden shadow-sm group",
-                "transition-all duration-700 delay-250 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
-                bottomCraft.isRevealed
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
-              )}
-            >
-              <Image
-                src="https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=800&q=80"
-                alt="Đĩa sushi nigiri hải sản tươi trên đá đen"
-                fill
-                sizes="(max-width: 1024px) 50vw, 25vw"
-                className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
-                <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[11px] font-medium text-stone-100">
-                  Set Nigiri hải sản đá đen
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
