@@ -4,6 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 
 interface CategoryHighlight {
   id: string;
@@ -130,12 +131,14 @@ export function CuratedCategoriesSection() {
             >
               {/* Image Frame */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/30 dark:bg-stone-950">
-                <Image
+                <SafeImage
                   src={item.image}
                   alt={item.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-106"
+                  fallbackSrc="/images/placeholder-dish.svg"
+                  fallbackText={item.title}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent dark:from-stone-950 dark:via-stone-950/15" />
               </div>

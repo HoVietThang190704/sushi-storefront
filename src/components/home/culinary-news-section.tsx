@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 
 interface NewsItem {
   id: string;
@@ -29,7 +29,7 @@ const NEWS_LIST: NewsItem[] = [
     date: "17.09.2026",
     tag: "Mùa nguyên liệu",
     image:
-      "https://images.unsplash.com/photo-1502364219907-3ac158074f76?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80",
     summary:
       "Mùa cá béo nhất trong năm được tuyển chọn trực tiếp và phục vụ trong các set sashimi đặc biệt của tháng.",
   },
@@ -81,14 +81,16 @@ export function CulinaryNewsSection() {
             >
               {/* Image Frame */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
-                <Image
+                <SafeImage
                   src={post.image}
                   alt={post.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                  fallbackSrc="/images/placeholder-dish.svg"
+                  fallbackText="Hình ảnh bài viết đang cập nhật"
                 />
-                <span className="absolute top-3 left-3 rounded-md bg-background/90 backdrop-blur-xs px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-xs">
+                <span className="absolute top-3 left-3 rounded-md bg-background/90 backdrop-blur-xs px-2.5 py-1 text-[10px] font-semibold text-foreground shadow-xs z-10">
                   {post.tag}
                 </span>
               </div>

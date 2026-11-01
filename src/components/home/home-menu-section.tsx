@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { SafeImage } from "@/components/ui/safe-image";
 import {
   Category,
   Product,
@@ -272,13 +273,15 @@ export function HomeMenuSection() {
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30">
                       {hasImage ? (
                         <>
-                          <Image
+                          <SafeImage
                             src={product.imageUrl!}
                             alt={product.name}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             className="object-cover transition-transform duration-500 ease-out group-hover:scale-108"
                             loading="lazy"
+                            fallbackSrc="/images/placeholder-dish.svg"
+                            fallbackText={product.name}
                           />
                           {/* Lớp gradient nhẹ phủ trên cùng để badge luôn nổi bật */}
                           <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 via-black/10 to-transparent pointer-events-none" />
