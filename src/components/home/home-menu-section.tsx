@@ -229,16 +229,16 @@ export function HomeMenuSection() {
 
         {/* ==================== TRẠNG THÁI LOADING ==================== */}
         {isLoading && (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex flex-col justify-between overflow-hidden rounded-2xl border border-border/60 bg-card p-0 shadow-2xs">
+              <div key={i} className="flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-border/60 bg-card p-0 shadow-2xs">
                 <Skeleton className="aspect-[4/3] w-full rounded-none" />
-                <div className="p-4 sm:p-5 space-y-3">
-                  <Skeleton className="h-5 w-3/4 rounded-md" />
-                  <Skeleton className="h-3.5 w-1/2 rounded-md" />
-                  <div className="flex items-center justify-between pt-3 border-t border-border/40">
-                    <Skeleton className="h-6 w-24 rounded-md" />
-                    <Skeleton className="h-9 w-24 rounded-xl" />
+                <div className="p-3 sm:p-5 space-y-2 sm:space-y-3">
+                  <Skeleton className="h-4 sm:h-5 w-3/4 rounded-md" />
+                  <Skeleton className="h-3 sm:h-3.5 w-1/2 rounded-md" />
+                  <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-border/40">
+                    <Skeleton className="h-5 sm:h-6 w-16 sm:w-24 rounded-md" />
+                    <Skeleton className="h-8 sm:h-9 w-14 sm:w-24 rounded-lg sm:rounded-xl" />
                   </div>
                 </div>
               </div>
@@ -267,7 +267,7 @@ export function HomeMenuSection() {
 
         {/* ==================== DANH SÁCH SẢN PHẨM ==================== */}
         {!isLoading && !error && filteredProducts.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((product) => {
               const isAdded = addedProductId === product.id;
               const hasImage = Boolean(product.imageUrl);
@@ -275,7 +275,7 @@ export function HomeMenuSection() {
               return (
                 <div
                   key={product.id}
-                  className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:border-primary/40 hover:-translate-y-1.5 transition-all duration-300"
+                  className="group flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:border-primary/40 hover:-translate-y-1.5 transition-all duration-300"
                 >
                   <div>
                     {/* Khung ảnh món ăn */}
@@ -286,47 +286,47 @@ export function HomeMenuSection() {
                             src={product.imageUrl!}
                             alt={product.name}
                             fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover transition-transform duration-500 ease-out group-hover:scale-108"
                             loading="lazy"
                             fallbackSrc="/images/placeholder-dish.svg"
                             fallbackText={product.name}
                           />
                           {/* Lớp gradient nhẹ phủ trên cùng để badge luôn nổi bật */}
-                          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 via-black/10 to-transparent pointer-events-none" />
+                          <div className="absolute inset-x-0 top-0 h-12 sm:h-16 bg-gradient-to-b from-black/40 via-black/10 to-transparent pointer-events-none" />
                         </>
                       ) : (
                         /* Trạng thái chưa có ảnh: Thiết kế thủ công nghệ thuật Nhật Bản */
-                        <div className="relative flex size-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-500/10 via-primary/5 to-orange-500/10 p-6 text-center">
-                          <div className="absolute -right-6 -bottom-6 size-28 rounded-full border border-primary/10 bg-primary/5" />
-                          <div className="absolute -left-6 -top-6 size-24 rounded-full border border-amber-500/10 bg-amber-500/5" />
+                        <div className="relative flex size-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-500/10 via-primary/5 to-orange-500/10 p-3 sm:p-6 text-center">
+                          <div className="absolute -right-6 -bottom-6 size-20 sm:size-28 rounded-full border border-primary/10 bg-primary/5" />
+                          <div className="absolute -left-6 -top-6 size-16 sm:size-24 rounded-full border border-amber-500/10 bg-amber-500/5" />
                           
-                          <div className="relative flex size-14 items-center justify-center rounded-full bg-card/90 shadow-xs ring-1 ring-border/80 text-primary transition-transform duration-300 group-hover:scale-110">
-                            <UtensilsCrossed className="size-6 stroke-[1.75]" />
+                          <div className="relative flex size-10 sm:size-14 items-center justify-center rounded-full bg-card/90 shadow-xs ring-1 ring-border/80 text-primary transition-transform duration-300 group-hover:scale-110">
+                            <UtensilsCrossed className="size-4 sm:size-6 stroke-[1.75]" />
                           </div>
-                          <span className="relative mt-2.5 text-xs font-semibold text-foreground/90 tracking-wide line-clamp-1">
+                          <span className="relative mt-2 text-[11px] sm:text-xs font-semibold text-foreground/90 tracking-wide line-clamp-1">
                             {product.name}
                           </span>
-                          <span className="relative text-[10px] text-muted-foreground mt-0.5">
+                          <span className="relative text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden xs:inline sm:inline">
                             Món chuẩn vị Nhật Bản
                           </span>
                         </div>
                       )}
 
                       {/* Badges trên ảnh */}
-                      <div className="absolute left-3 top-3 flex flex-wrap gap-1.5 z-10">
+                      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex flex-wrap gap-1 sm:gap-1.5 z-10">
                         {product.type === "COMBO" && (
                           <Badge
-                            className="bg-amber-500 text-white font-bold text-[11px] px-2.5 py-0.5 rounded-full shadow-xs border-none flex items-center gap-1"
+                            className="bg-amber-500 text-white font-bold text-[9px] sm:text-[11px] px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border-none flex items-center gap-1"
                           >
-                            <Sparkles className="size-3" />
+                            <Sparkles className="size-2.5 sm:size-3" />
                             <span>Combo</span>
                           </Badge>
                         )}
                         {product.category?.name && (
                           <Badge
                             variant="secondary"
-                            className="bg-background/90 dark:bg-card/90 backdrop-blur-md text-[11px] font-medium text-foreground px-2.5 py-0.5 rounded-full shadow-xs border border-border/60"
+                            className="bg-background/90 dark:bg-card/90 backdrop-blur-md text-[9px] sm:text-[11px] font-medium text-foreground px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border border-border/60"
                           >
                             {product.category.name}
                           </Badge>
@@ -335,21 +335,21 @@ export function HomeMenuSection() {
                     </div>
 
                     {/* Thông tin món */}
-                    <div className="p-4 sm:p-5 pb-3">
-                      <h3 className="text-base sm:text-lg font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors tracking-tight">
+                    <div className="p-3 sm:p-5 pb-2 sm:pb-3">
+                      <h3 className="text-xs sm:text-base lg:text-lg font-bold text-foreground line-clamp-2 sm:line-clamp-1 group-hover:text-primary transition-colors tracking-tight leading-snug">
                         {product.name}
                       </h3>
                     </div>
                   </div>
 
                   {/* Giá và nút Thêm vào giỏ */}
-                  <div className="p-4 sm:p-5 pt-0">
-                    <div className="flex items-center justify-between gap-2 border-t border-border/50 pt-3">
+                  <div className="p-3 sm:p-5 pt-0">
+                    <div className="flex items-center justify-between gap-1.5 border-t border-border/50 pt-2.5 sm:pt-3">
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Giá món
                         </span>
-                        <span className="text-base sm:text-lg font-extrabold text-primary tracking-tight whitespace-nowrap">
+                        <span className="text-xs sm:text-base lg:text-lg font-extrabold text-primary tracking-tight truncate">
                           {formatPrice(product.sellingPrice)}
                         </span>
                       </div>
@@ -357,18 +357,20 @@ export function HomeMenuSection() {
                       <Button
                         size="sm"
                         onClick={() => handleAddToCart(product)}
-                        className="h-9.5 px-3.5 rounded-xl font-semibold gap-1.5 shrink-0 transition-all shadow-xs hover:shadow-md active:scale-95"
+                        className="h-8 sm:h-9.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-semibold gap-1 shrink-0 transition-all shadow-xs hover:shadow-md active:scale-95"
                         variant={isAdded ? "outline" : "default"}
+                        aria-label={`Thêm ${product.name} vào giỏ hàng`}
                       >
                         {isAdded ? (
                           <>
-                            <Check className="size-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
-                            <span className="text-xs">Đã thêm</span>
+                            <Check className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                            <span className="text-[11px] sm:text-xs">Đã thêm</span>
                           </>
                         ) : (
                           <>
-                            <Plus className="size-4 stroke-[2.5]" />
-                            <span className="text-xs">Chọn món</span>
+                            <Plus className="size-3.5 sm:size-4 stroke-[2.5]" />
+                            <span className="text-[11px] sm:text-xs">Chọn</span>
+                            <span className="hidden sm:inline text-xs">món</span>
                           </>
                         )}
                       </Button>
