@@ -34,10 +34,10 @@
 
 :root {
   --radius: 0.75rem;
-  /* Light mode: Warm Japanese ivory-cream background */
-  --background: oklch(0.985 0.006 75);
+  /* Light mode: Pure crisp white background */
+  --background: oklch(1 0 0);
   --foreground: oklch(0.18 0.015 50);
-  /* Pure crisp white card surface with warm depth */
+  /* Pure crisp white card surface with subtle border & shadow depth */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.015 50);
   --popover: oklch(1 0 0);
@@ -45,16 +45,16 @@
   /* Sushi Vermilion / Cinnabar Red matching the Torii logo */
   --primary: oklch(0.55 0.22 27);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.012 75);
+  --secondary: oklch(0.96 0.005 75);
   --secondary-foreground: oklch(0.25 0.02 50);
-  --muted: oklch(0.95 0.01 75);
-  --muted-foreground: oklch(0.52 0.02 50);
-  --accent: oklch(0.95 0.02 55);
+  --muted: oklch(0.96 0.005 75);
+  --muted-foreground: oklch(0.50 0.015 50);
+  --accent: oklch(0.96 0.005 75);
   --accent-foreground: oklch(0.25 0.02 50);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.91 0.01 75);
-  --input: oklch(0.91 0.01 75);
+  --border: oklch(0.92 0.004 75);
+  --input: oklch(0.92 0.004 75);
   --ring: oklch(0.55 0.22 27);
 }
 

@@ -1,4 +1,4 @@
-// Sushi Platform Storefront Root Layout
+// Sushi Platform Storefront Root Layout - Light mode white background
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
