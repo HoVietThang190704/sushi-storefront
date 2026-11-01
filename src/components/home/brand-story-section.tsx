@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export function BrandStorySection() {
   return (
@@ -19,8 +19,7 @@ export function BrandStorySection() {
             </div>
 
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase text-red-100 backdrop-blur-xs">
-                <Sparkles className="size-3 text-amber-300" />
+              <div className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase text-red-100 backdrop-blur-xs">
                 <span>TRIẾT LÝ ẨM THỰC • 料理哲学</span>
               </div>
 
