@@ -84,6 +84,39 @@ export function HomeMenuSection() {
     };
   }, []);
 
+  // Lắng nghe sự kiện chọn danh mục từ phần Thực đơn đặc sắc
+  React.useEffect(() => {
+    const handleSelectCategory = (event: Event) => {
+      const customEvent = event as CustomEvent<{ target?: string }>;
+      const target = customEvent.detail?.target?.toLowerCase();
+      if (!target) {
+        setSelectedCategoryId(null);
+        return;
+      }
+
+      if (target === "all") {
+        setSelectedCategoryId(null);
+        return;
+      }
+
+      const matched = categories.find((c) => {
+        const cname = c.name.toLowerCase();
+        return cname === target || cname.includes(target) || target.includes(cname);
+      });
+
+      if (matched) {
+        setSelectedCategoryId(matched.id);
+      } else {
+        setSelectedCategoryId(null);
+      }
+    };
+
+    window.addEventListener("sushi-select-category", handleSelectCategory);
+    return () => {
+      window.removeEventListener("sushi-select-category", handleSelectCategory);
+    };
+  }, [categories]);
+
   // Lọc sản phẩm theo danh mục đang chọn
   const filteredProducts = React.useMemo(() => {
     if (!selectedCategoryId) return products;
