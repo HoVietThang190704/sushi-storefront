@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Toaster } from "@/components/ui/sonner";
+import { ScrollToTopButton } from "@/components/ui/scroll-to-top";
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -47,6 +48,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
+          <ScrollToTopButton />
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
