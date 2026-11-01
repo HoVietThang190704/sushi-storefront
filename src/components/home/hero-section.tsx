@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b border-border/40 bg-[#16181b] text-stone-100">
+    <section className="relative flex flex-col justify-center overflow-hidden border-b border-border/40 bg-[#16181b] text-stone-100 py-16 sm:py-24 md:py-0 md:min-h-[calc(100vh-4.5rem)]">
       {/* Background image: Bright, appetizing culinary photography */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -18,7 +18,7 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28 lg:px-8 lg:py-36">
+      <div className="relative z-10 w-full mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-16 lg:px-8">
         <div className="max-w-2xl">
           {/* Main heading */}
           <h1 className="font-serif text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl leading-[1.18] drop-shadow-md">

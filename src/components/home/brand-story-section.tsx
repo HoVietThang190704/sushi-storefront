@@ -1,15 +1,73 @@
+"use client";
+
+import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+function useScrollReveal(threshold = 0.12) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [isRevealed, setIsRevealed] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+
+    // Check if user prefers reduced motion
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion) {
+      setIsRevealed(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsRevealed(true);
+          observer.disconnect(); // One-shot trigger to save CPU & memory
+        }
+      },
+      {
+        threshold,
+        rootMargin: "0px 0px -40px 0px",
+      }
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [threshold]);
+
+  return { ref, isRevealed };
+}
 
 export function BrandStorySection() {
+  const topStory = useScrollReveal(0.1);
+  const bottomCraft = useScrollReveal(0.1);
+
   return (
-    <section className="relative overflow-hidden py-12 md:py-18 bg-background border-b border-border/60">
+    <section className="relative overflow-hidden py-14 md:py-22 bg-background border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Top: Balanced Asymmetric Presentation Card & Story */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
-          {/* Left: Japanese Vermilion Accent Card - Balanced & Refined */}
-          <div className="lg:col-span-5 relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 via-red-700 to-red-900 p-6 sm:p-8 text-white shadow-lg shadow-red-950/15 border border-red-500/30">
+        {/* Top Split: Red Statement Card + Editorial Narrative (Image 2) */}
+        <div
+          ref={topStory.ref}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center"
+        >
+          {/* Left: Japanese Vermilion Accent Card */}
+          <div
+            className={cn(
+              "lg:col-span-5 relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600 via-red-700 to-red-900 p-6 sm:p-8 text-white shadow-lg shadow-red-950/15 border border-red-500/30",
+              "transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+              topStory.isRevealed
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            )}
+          >
             {/* Subtle Takumi Artisan Kanji watermark */}
             <div
               className="pointer-events-none absolute -bottom-4 -right-2 select-none opacity-10 font-serif text-8xl text-white font-bold"
@@ -39,8 +97,16 @@ export function BrandStorySection() {
             </div>
           </div>
 
-          {/* Right: Narrative Story Block with tight, coherent hierarchy */}
-          <div className="lg:col-span-7 flex flex-col justify-center space-y-4">
+          {/* Right: Narrative Story Block */}
+          <div
+            className={cn(
+              "lg:col-span-7 flex flex-col justify-center space-y-4",
+              "transition-all duration-700 delay-150 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+              topStory.isRevealed
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            )}
+          >
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
               <span className="h-0.5 w-6 bg-primary" />
               <span>CHUYỆN NGHỀ & TÂM HUYẾT</span>
@@ -76,11 +142,22 @@ export function BrandStorySection() {
           </div>
         </div>
 
-        {/* Bottom: 3 Value Pillars (Honest Information, No Fake Click Arrows) + 2 Verified Food Photos */}
-        <div className="mt-10 lg:mt-14 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center border-t border-border/60 pt-8">
-          {/* 3 Pillars List - Clear Informational Commitments */}
+        {/* Bottom Split: 3 Value Pillars + 2 Food Photos (Image 3) */}
+        <div
+          ref={bottomCraft.ref}
+          className="mt-12 lg:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center border-t border-border/60 pt-8"
+        >
+          {/* 3 Pillars List */}
           <div className="lg:col-span-6 space-y-3">
-            <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs">
+            <div
+              className={cn(
+                "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
+                "transition-all duration-600 delay-75 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                bottomCraft.isRevealed
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-6"
+              )}
+            >
               <div className="flex items-center gap-2.5">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
                   1
@@ -94,7 +171,15 @@ export function BrandStorySection() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs">
+            <div
+              className={cn(
+                "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
+                "transition-all duration-600 delay-150 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                bottomCraft.isRevealed
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-6"
+              )}
+            >
               <div className="flex items-center gap-2.5">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
                   2
@@ -108,7 +193,15 @@ export function BrandStorySection() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs">
+            <div
+              className={cn(
+                "rounded-xl border border-border/60 bg-card p-4 shadow-2xs",
+                "transition-all duration-600 delay-225 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                bottomCraft.isRevealed
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-6"
+              )}
+            >
               <div className="flex items-center gap-2.5">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
                   3
@@ -123,9 +216,17 @@ export function BrandStorySection() {
             </div>
           </div>
 
-          {/* 2 Visual Craft Tiles with 100% Accurate Captions */}
+          {/* 2 Visual Craft Tiles with staggered smooth reveal */}
           <div className="lg:col-span-6 grid grid-cols-2 gap-3.5 h-full min-h-[260px]">
-            <div className="relative rounded-xl overflow-hidden shadow-sm group">
+            <div
+              className={cn(
+                "relative rounded-xl overflow-hidden shadow-sm group",
+                "transition-all duration-700 delay-150 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                bottomCraft.isRevealed
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              )}
+            >
               <Image
                 src="https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=80"
                 alt="Khay sushi cuộn Maki Roll tổng hợp tươi ngon"
@@ -140,7 +241,15 @@ export function BrandStorySection() {
               </div>
             </div>
 
-            <div className="relative rounded-xl overflow-hidden shadow-sm group">
+            <div
+              className={cn(
+                "relative rounded-xl overflow-hidden shadow-sm group",
+                "transition-all duration-700 delay-250 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                bottomCraft.isRevealed
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              )}
+            >
               <Image
                 src="https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=800&q=80"
                 alt="Đĩa sushi nigiri hải sản tươi trên đá đen"
