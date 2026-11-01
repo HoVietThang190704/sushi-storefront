@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 
 export function BrandStorySection() {
   return (
-    <section className="relative overflow-hidden py-14 md:py-20 bg-background border-b border-border/60">
+    <section className="relative overflow-hidden py-12 md:py-18 bg-background border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top: Balanced Asymmetric Presentation Card & Story */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
@@ -76,88 +76,82 @@ export function BrandStorySection() {
           </div>
         </div>
 
-        {/* Bottom: 3 Value Pillars + 2 Culinary Craft Photos */}
+        {/* Bottom: 3 Value Pillars (Honest Information, No Fake Click Arrows) + 2 Verified Food Photos */}
         <div className="mt-10 lg:mt-14 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center border-t border-border/60 pt-8">
-          {/* 3 Pillars List */}
+          {/* 3 Pillars List - Clear Informational Commitments */}
           <div className="lg:col-span-6 space-y-3">
-            <div className="group rounded-xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40 hover:shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-primary tracking-widest">
-                  01
+            <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
+                  1
                 </span>
-                <ArrowRight className="size-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <h4 className="text-sm font-semibold text-foreground">
+                  Nguyên vật liệu hải sản tươi sống cao cấp
+                </h4>
               </div>
-              <h4 className="mt-1 text-sm font-semibold text-foreground">
-                Sushi truyền thống cùng nguyên vật liệu cao cấp
-              </h4>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                Hải sản tươi sống chọn lọc mỗi ngày, hạt gạo Nhật hòa quyện cùng
-                giấm ủ cho vị chua thanh tao.
+              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
+                Cá hồi Na Uy, cá ngừ đại dương nhập mới hàng ngày, gạo Nhật dẻo thơm hòa quyện cùng giấm ủ truyền thống.
               </p>
             </div>
 
-            <div className="group rounded-xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40 hover:shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-primary tracking-widest">
-                  02
+            <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
+                  2
                 </span>
-                <ArrowRight className="size-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <h4 className="text-sm font-semibold text-foreground">
+                  Bảo quản chuẩn nhiệt độ cho đơn Take Away
+                </h4>
               </div>
-              <h4 className="mt-1 text-sm font-semibold text-foreground">
-                Thực phẩm an toàn, bảo quản chuẩn nhiệt độ
-              </h4>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                Bảo quản lạnh khép kín và đóng hộp chuyên dụng cho món mang đi,
-                giữ trọn vẹn dưỡng chất tươi ngon.
+              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
+                Quy trình giữ lạnh chuyên dụng và khay hộp chuyên biệt bảo vệ cấu trúc hạt cơm cùng độ béo ngọt của cá.
               </p>
             </div>
 
-            <div className="group rounded-xl border border-border/60 bg-card p-4 transition-all hover:border-primary/40 hover:shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-primary tracking-widest">
-                  03
+            <div className="rounded-xl border border-border/60 bg-card p-4 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
+                  3
                 </span>
-                <ArrowRight className="size-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <h4 className="text-sm font-semibold text-foreground">
+                  Trải nghiệm vị giác hài hòa theo triết lý Nhật
+                </h4>
               </div>
-              <h4 className="mt-1 text-sm font-semibold text-foreground">
-                Trải nghiệm văn hoá và tinh thần hiếu khách Nhật Bản
-              </h4>
-              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                Mỗi hộp sushi là sự chỉn chu trong từng nhát dao, cách bài trí
-                hài hòa theo triết lý ngũ sắc.
+              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed pl-8.5">
+                Mỗi hộp sushi bài trí cân đối theo triết lý ngũ sắc, đem lại bữa ăn tinh tế, dinh dưỡng và ngon miệng.
               </p>
             </div>
           </div>
 
-          {/* 2 Visual Craft Tiles */}
+          {/* 2 Visual Craft Tiles with 100% Accurate Captions */}
           <div className="lg:col-span-6 grid grid-cols-2 gap-3.5 h-full min-h-[260px]">
             <div className="relative rounded-xl overflow-hidden shadow-sm group">
               <Image
                 src="https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=80"
-                alt="Chef preparing fresh salmon sashimi with knife"
+                alt="Khay sushi cuộn Maki Roll tổng hợp tươi ngon"
                 fill
                 sizes="(max-width: 1024px) 50vw, 25vw"
                 className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end p-3.5">
-                <p className="text-xs font-medium text-stone-100">
-                  Nghệ thuật thái phi-lê chuẩn xác
-                </p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
+                <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[11px] font-medium text-stone-100">
+                  Khay Maki Roll tổng hợp
+                </span>
               </div>
             </div>
 
             <div className="relative rounded-xl overflow-hidden shadow-sm group">
               <Image
                 src="https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=800&q=80"
-                alt="Nigiri sushi craftsmanship with glazed sauce"
+                alt="Đĩa sushi nigiri hải sản tươi trên đá đen"
                 fill
                 sizes="(max-width: 1024px) 50vw, 25vw"
                 className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex items-end p-3.5">
-                <p className="text-xs font-medium text-stone-100">
-                  Nigiri lươn nướng sốt Kabayaki
-                </p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
+                <span className="rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[11px] font-medium text-stone-100">
+                  Set Nigiri hải sản đá đen
+                </span>
               </div>
             </div>
           </div>
