@@ -93,29 +93,29 @@ export function CuratedCategoriesSection() {
   };
 
   return (
-    <section className="relative overflow-hidden py-14 md:py-20 bg-[#0a0b0d] text-stone-100 border-b border-stone-800/80">
+    <section className="relative overflow-hidden py-14 md:py-20 bg-background text-foreground border-b border-border/70 dark:bg-[#0a0b0d] dark:text-stone-100 dark:border-stone-800/80">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end border-b border-stone-800/70 pb-6">
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end border-b border-border/60 dark:border-stone-800/70 pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-red-400">
-              <span className="h-0.5 w-6 bg-red-500" />
+            <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-primary dark:text-red-400">
+              <span className="h-0.5 w-6 bg-primary dark:bg-red-500" />
               <span>厳選メニュー • MENU HIGHLIGHTS</span>
             </div>
-            <h2 className="mt-2 font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl">
+            <h2 className="mt-2 font-serif text-2xl font-bold tracking-tight text-foreground dark:text-white sm:text-3xl md:text-4xl">
               THỰC ĐƠN ĐẶC SẮC
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-stone-400 max-w-xl">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground dark:text-stone-400 max-w-xl">
               Lựa chọn danh mục yêu thích để chuyển nhanh đến thực đơn đặt món trực tuyến mang về.
             </p>
           </div>
 
           <Link
             href="/menu"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-stone-300 hover:text-white transition-colors group shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground dark:text-stone-300 dark:hover:text-white transition-colors group shrink-0"
           >
             <span>Xem thực đơn chi tiết</span>
-            <ArrowUpRight className="size-4 text-red-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <ArrowUpRight className="size-4 text-primary dark:text-red-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </div>
 
@@ -126,10 +126,10 @@ export function CuratedCategoriesSection() {
               key={item.id}
               href="#thuc-don"
               onClick={(e) => handleCategoryClick(e, item.targetCategory)}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-stone-800/80 bg-stone-900/60 shadow-md transition-all duration-300 hover:border-red-500/50 hover:bg-stone-900 hover:shadow-xl hover:shadow-red-950/20"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 dark:border-stone-800/80 dark:bg-stone-900/60 dark:shadow-md dark:hover:translate-y-0 dark:hover:border-red-500/50 dark:hover:bg-stone-900 dark:hover:shadow-xl dark:hover:shadow-red-950/20"
             >
               {/* Image Frame */}
-              <div className="relative aspect-[16/10] w-full overflow-hidden bg-stone-950">
+              <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/30 dark:bg-stone-950">
                 <Image
                   src={item.image}
                   alt={item.title}
@@ -137,26 +137,26 @@ export function CuratedCategoriesSection() {
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-106"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/15 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent dark:from-stone-950 dark:via-stone-950/15" />
               </div>
 
               {/* Card Content */}
               <div className="flex flex-1 flex-col justify-between p-5">
                 <div>
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-red-300 transition-colors">
+                    <h3 className="font-serif text-base sm:text-lg font-bold tracking-tight text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-red-300 transition-colors">
                       {item.title}
                     </h3>
-                    <span className="text-xs text-stone-400 font-serif">
+                    <span className="text-xs text-muted-foreground/80 dark:text-stone-400 font-serif">
                       {item.japanese}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-stone-300">
+                  <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-muted-foreground dark:text-stone-300">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-red-400 group-hover:text-red-300 transition-colors pt-3 border-t border-stone-800/60">
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-primary dark:text-red-400 group-hover:text-primary/80 dark:group-hover:text-red-300 transition-colors pt-3 border-t border-border/60 dark:border-stone-800/60">
                   <span>Xem món trong danh mục</span>
                   <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
