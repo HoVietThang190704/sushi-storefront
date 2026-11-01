@@ -118,14 +118,14 @@ export function CuratedCategoriesSection() {
           </Link>
         </div>
 
-        {/* 6 Category Tiles Grid (1 col mobile, 2 cols tablet, 3 cols desktop) */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* 6 Category Tiles Grid (2 cols mobile, 2 cols tablet, 3 cols desktop) */}
+        <div className="mt-6 sm:mt-8 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {CATEGORIES.map((item) => (
             <a
               key={item.id}
               href="#thuc-don"
               onClick={(e) => handleCategoryClick(e, item.targetCategory)}
-              className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 dark:border-stone-800/80 dark:bg-stone-900/60 dark:shadow-md dark:hover:translate-y-0 dark:hover:border-red-500/50 dark:hover:bg-stone-900 dark:hover:shadow-xl dark:hover:shadow-red-950/20"
+              className="group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 dark:border-stone-800/80 dark:bg-stone-900/60 dark:shadow-md dark:hover:translate-y-0 dark:hover:border-red-500/50 dark:hover:bg-stone-900 dark:hover:shadow-xl dark:hover:shadow-red-950/20"
             >
               {/* Image Frame */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/30 dark:bg-stone-950">
@@ -133,7 +133,7 @@ export function CuratedCategoriesSection() {
                   src={item.image}
                   alt={item.title}
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  sizes="(max-width: 1024px) 50vw, 33vw"
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-106"
                   fallbackSrc="/images/placeholder-dish.svg"
                   fallbackText={item.title}
@@ -142,24 +142,25 @@ export function CuratedCategoriesSection() {
               </div>
 
               {/* Card Content */}
-              <div className="flex flex-1 flex-col justify-between p-5">
+              <div className="flex flex-1 flex-col justify-between p-3 sm:p-5">
                 <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-base sm:text-lg font-bold tracking-tight text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-red-300 transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2">
+                    <h3 className="font-serif text-xs sm:text-base lg:text-lg font-bold tracking-tight text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-red-300 transition-colors line-clamp-1 sm:line-clamp-none">
                       {item.title}
                     </h3>
-                    <span className="text-xs text-muted-foreground/80 dark:text-stone-400 font-serif">
+                    <span className="text-[10px] sm:text-xs text-muted-foreground/80 dark:text-stone-400 font-serif">
                       {item.japanese}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs sm:text-[13px] leading-relaxed text-muted-foreground dark:text-stone-300">
+                  <p className="mt-1 sm:mt-2 text-[11px] sm:text-[13px] leading-relaxed text-muted-foreground dark:text-stone-300 line-clamp-2 sm:line-clamp-none">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-primary dark:text-red-400 group-hover:text-primary/80 dark:group-hover:text-red-300 transition-colors pt-3 border-t border-border/60 dark:border-stone-800/60">
-                  <span>Xem món trong danh mục</span>
-                  <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <div className="mt-2.5 sm:mt-4 flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-primary dark:text-red-400 group-hover:text-primary/80 dark:group-hover:text-red-300 transition-colors pt-2 sm:pt-3 border-t border-border/60 dark:border-stone-800/60">
+                  <span className="hidden sm:inline">Xem món trong danh mục</span>
+                  <span className="sm:hidden">Xem món</span>
+                  <ArrowUpRight className="size-3 sm:size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
               </div>
             </a>
