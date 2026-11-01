@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
@@ -59,6 +58,7 @@ const CATEGORIES: CategoryHighlight[] = [
     desc: "Cơm bát Donburi ấm nóng, mì Udon cùng Ramen nước dùng hầm thanh ngọt tự nhiên.",
     image:
       "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80",
+    targetCategory: "cơm",
   },
   {
     id: "dessert",
@@ -67,6 +67,7 @@ const CATEGORIES: CategoryHighlight[] = [
     desc: "Trà xanh gạo rang Genmaicha, kem Matcha Hokkaido cùng bánh Mochi thanh ngọt.",
     image:
       "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80",
+    targetCategory: "uống",
   },
 ];
 
@@ -75,8 +76,6 @@ export function CuratedCategoriesSection() {
     e: React.MouseEvent<HTMLAnchorElement>,
     targetCategory?: string
   ) => {
-    e.preventDefault();
-
     if (targetCategory) {
       window.dispatchEvent(
         new CustomEvent("sushi-select-category", {
@@ -87,9 +86,8 @@ export function CuratedCategoriesSection() {
 
     const menuEl = document.getElementById("thuc-don");
     if (menuEl) {
+      e.preventDefault();
       menuEl.scrollIntoView({ behavior: "smooth" });
-    } else {
-      window.location.hash = "thuc-don";
     }
   };
 

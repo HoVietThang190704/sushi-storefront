@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { SafeImage } from "@/components/ui/safe-image";
 import {
@@ -60,25 +59,37 @@ export function HomeMenuSection() {
 
   React.useEffect(() => {
     let ignore = false;
-    Promise.all([
-      fetch("/api/catalog/categories").then((r) => r.json()),
-      fetch("/api/catalog/products").then((r) => r.json()),
-    ])
-      .then(([catRes, prodRes]) => {
+
+    async function initialFetch() {
+      try {
+        const [catRes, prodRes] = await Promise.all([
+          fetch("/api/catalog/categories").then((r) => {
+            if (!r.ok) throw new Error("Lỗi tải danh mục");
+            return r.json();
+          }),
+          fetch("/api/catalog/products").then((r) => {
+            if (!r.ok) throw new Error("Lỗi tải sản phẩm");
+            return r.json();
+          }),
+        ]);
+
         if (!ignore) {
           setCategories(catRes.data || []);
           setProducts(prodRes.data || []);
+          setError(null);
           setIsLoading(false);
         }
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         if (!ignore) {
           setError(
             err instanceof Error ? err.message : "Không thể kết nối đến máy chủ"
           );
           setIsLoading(false);
         }
-      });
+      }
+    }
+
+    initialFetch();
 
     return () => {
       ignore = true;
@@ -90,33 +101,31 @@ export function HomeMenuSection() {
     const handleSelectCategory = (event: Event) => {
       const customEvent = event as CustomEvent<{ target?: string }>;
       const target = customEvent.detail?.target?.toLowerCase();
-      if (!target) {
+      if (!target || target === "all") {
         setSelectedCategoryId(null);
         return;
       }
 
-      if (target === "all") {
-        setSelectedCategoryId(null);
-        return;
-      }
+      setCategories((currentCategories) => {
+        const matched = currentCategories.find((c) => {
+          const cname = c.name.toLowerCase();
+          return (
+            cname === target ||
+            cname.includes(target) ||
+            target.includes(cname)
+          );
+        });
 
-      const matched = categories.find((c) => {
-        const cname = c.name.toLowerCase();
-        return cname === target || cname.includes(target) || target.includes(cname);
+        setSelectedCategoryId(matched ? matched.id : null);
+        return currentCategories;
       });
-
-      if (matched) {
-        setSelectedCategoryId(matched.id);
-      } else {
-        setSelectedCategoryId(null);
-      }
     };
 
     window.addEventListener("sushi-select-category", handleSelectCategory);
     return () => {
       window.removeEventListener("sushi-select-category", handleSelectCategory);
     };
-  }, [categories]);
+  }, []);
 
   // Lọc sản phẩm theo danh mục đang chọn
   const filteredProducts = React.useMemo(() => {

@@ -20,20 +20,19 @@ export function SafeImage({
   className,
   ...props
 }: SafeImageProps) {
-  const [hasError, setHasError] = React.useState<boolean>(!src);
+  const [failedSrc, setFailedSrc] = React.useState<ImageProps["src"] | null>(null);
+  const [fallbackFailed, setFallbackFailed] = React.useState<boolean>(false);
 
-  React.useEffect(() => {
-    setHasError(!src);
-  }, [src]);
+  const isMainError = !src || failedSrc === src;
 
-  if (hasError) {
-    if (fallbackSrc) {
+  if (isMainError) {
+    if (fallbackSrc && !fallbackFailed) {
       return (
         <Image
           src={fallbackSrc}
           alt={alt || "Ảnh thay thế"}
           className={className}
-          onError={() => setHasError(true)}
+          onError={() => setFallbackFailed(true)}
           {...props}
         />
       );
@@ -62,7 +61,10 @@ export function SafeImage({
       src={src}
       alt={alt}
       className={className}
-      onError={() => setHasError(true)}
+      onError={() => {
+        setFailedSrc(src);
+        setFallbackFailed(false);
+      }}
       {...props}
     />
   );
