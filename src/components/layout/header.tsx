@@ -69,7 +69,7 @@ export function Header() {
             className="group flex items-center transition-opacity hover:opacity-90"
             aria-label="Về trang chủ"
           >
-            <div className="relative flex h-11 w-40 sm:w-52 items-center justify-start transition-transform group-hover:scale-105">
+            <div className="relative flex h-10 w-36 sm:h-11 sm:w-48 md:w-52 items-center justify-start transition-transform group-hover:scale-105">
               <Image
                 src="/images/logo.svg"
                 alt="Sushi Platform Logo"
@@ -77,7 +77,7 @@ export function Header() {
                 height={44}
                 priority
                 unoptimized
-                className="h-full w-auto max-h-11 object-contain object-left"
+                className="h-full w-auto max-h-10 sm:max-h-11 object-contain object-left"
               />
             </div>
           </Link>
@@ -112,7 +112,7 @@ export function Header() {
         </nav>
 
         {/* ===================== KHỐI PHẢI: ACTIONS ===================== */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {/* Ô tìm kiếm mở rộng (Desktop) */}
           <div className="relative hidden lg:block">
             {isSearchOpen ? (
@@ -158,19 +158,20 @@ export function Header() {
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               title="Tìm kiếm món ăn"
               aria-label="Tìm kiếm"
+              className="size-9"
             >
               <Search className="size-5" />
             </Button>
           </div>
 
-          {/* Nút chuyển đổi màu (Theme Toggle: Sun / Moon vector icon) */}
-          <ThemeToggle />
+          {/* Nút chuyển đổi màu (Theme Toggle: Sun / Moon vector icon - ẩn trên mobile nhỏ vì đã có trong drawer menu) */}
+          <ThemeToggle className="hidden sm:inline-flex size-9" />
 
           {/* Logo giỏ hàng */}
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative size-9"
             asChild
             title="Giỏ hàng của bạn"
           >
@@ -179,7 +180,7 @@ export function Header() {
               {isMounted && totalItems > 0 && (
                 <Badge
                   variant="default"
-                  className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full p-0 text-[10px] font-bold"
+                  className="absolute -top-1 -right-1 flex size-4 sm:size-5 items-center justify-center rounded-full p-0 text-[10px] font-bold"
                 >
                   {totalItems > 99 ? "99+" : totalItems}
                 </Badge>
@@ -187,12 +188,13 @@ export function Header() {
             </Link>
           </Button>
 
-          {/* Biểu tượng User */}
+          {/* Biểu tượng User (ẩn trên mobile nhỏ vì đã có trong drawer menu) */}
           <Button
             variant="ghost"
             size="icon"
             asChild
             title="Tài khoản / Đăng nhập"
+            className="hidden sm:inline-flex size-9"
           >
             <Link href="/account" aria-label="Tài khoản cá nhân">
               <User className="size-5" />
@@ -207,6 +209,7 @@ export function Header() {
                   variant="ghost"
                   size="icon"
                   aria-label="Mở menu điều hướng"
+                  className="size-9"
                 >
                   <MenuIcon className="size-5" />
                 </Button>

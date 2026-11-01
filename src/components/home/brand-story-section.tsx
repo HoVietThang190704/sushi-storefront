@@ -70,7 +70,7 @@ export function BrandStorySection() {
           >
             {/* Subtle Takumi Artisan Kanji watermark */}
             <div
-              className="pointer-events-none absolute -bottom-4 -right-2 select-none opacity-10 font-serif text-8xl text-white font-bold"
+              className="pointer-events-none absolute -bottom-4 right-0 select-none opacity-10 font-serif text-8xl text-white font-bold"
               aria-hidden="true"
             >
               匠

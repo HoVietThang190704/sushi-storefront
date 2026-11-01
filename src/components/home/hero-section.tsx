@@ -18,18 +18,18 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
       </div>
 
-      <div className="relative z-10 w-full mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-16 lg:px-8">
+      <div className="relative z-10 w-full mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-16 lg:px-8">
         <div className="max-w-2xl">
           {/* Main heading */}
-          <h1 className="font-serif text-3xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl leading-[1.18] drop-shadow-md">
-            Hương vị tinh tế của <br />
+          <h1 className="font-serif text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.2] drop-shadow-md">
+            Hương vị tinh tế của <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-red-400 via-amber-200 to-amber-100 bg-clip-text text-transparent">
               Ẩm thực Sushi Nhật Bản
             </span>
           </h1>
 
           {/* Subtext description */}
-          <p className="mt-5 max-w-xl text-sm leading-relaxed text-stone-200/95 sm:text-base md:text-lg drop-shadow-sm">
+          <p className="mt-4 sm:mt-5 max-w-xl text-xs sm:text-base md:text-lg leading-relaxed text-stone-200/95 drop-shadow-sm">
             Thưởng thức nghệ thuật sushi tươi ngon từ nguồn hải sản cao cấp nhập
             khẩu chính gốc. Trải nghiệm chất lượng và tinh hoa ẩm thực truyền
             thống xứ sở Phù Tang.
