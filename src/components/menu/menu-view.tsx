@@ -417,69 +417,75 @@ export function MenuView() {
                   className="group flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:border-primary/40 hover:-translate-y-1.5 transition-all duration-300"
                 >
                   <div>
-                    {/* Khung ảnh món ăn */}
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30">
-                      {hasImage ? (
-                        <>
-                          <SafeImage
-                            src={product.imageUrl!}
-                            alt={product.name}
-                            fill
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            className="object-cover transition-transform duration-500 ease-out group-hover:scale-108"
-                            loading="lazy"
-                            fallbackSrc="/images/placeholder-dish.svg"
-                            fallbackText={product.name}
-                          />
-                          <div className="absolute inset-x-0 top-0 h-12 sm:h-16 bg-gradient-to-b from-black/40 via-black/10 to-transparent pointer-events-none" />
-                        </>
-                      ) : (
-                        <div className="relative flex size-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-500/10 via-primary/5 to-orange-500/10 p-3 sm:p-6 text-center">
-                          <div className="absolute -right-6 -bottom-6 size-20 sm:size-28 rounded-full border border-primary/10 bg-primary/5" />
-                          <div className="absolute -left-6 -top-6 size-16 sm:size-24 rounded-full border border-amber-500/10 bg-amber-500/5" />
+                    {/* Khung ảnh & Tên món dẫn đến trang chi tiết */}
+                    <Link
+                      href={`/menu/${product.slug || product.id}`}
+                      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-t-xl sm:rounded-t-2xl"
+                    >
+                      {/* Khung ảnh món ăn */}
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30">
+                        {hasImage ? (
+                          <>
+                            <SafeImage
+                              src={product.imageUrl!}
+                              alt={product.name}
+                              fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                              className="object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                              loading="lazy"
+                              fallbackSrc="/images/placeholder-dish.svg"
+                              fallbackText={product.name}
+                            />
+                            <div className="absolute inset-x-0 top-0 h-12 sm:h-16 bg-gradient-to-b from-black/40 via-black/10 to-transparent pointer-events-none" />
+                          </>
+                        ) : (
+                          <div className="relative flex size-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-500/10 via-primary/5 to-orange-500/10 p-3 sm:p-6 text-center">
+                            <div className="absolute -right-6 -bottom-6 size-20 sm:size-28 rounded-full border border-primary/10 bg-primary/5" />
+                            <div className="absolute -left-6 -top-6 size-16 sm:size-24 rounded-full border border-amber-500/10 bg-amber-500/5" />
 
-                          <div className="relative flex size-10 sm:size-14 items-center justify-center rounded-full bg-card/90 shadow-xs ring-1 ring-border/80 text-primary transition-transform duration-300 group-hover:scale-110">
-                            <UtensilsCrossed className="size-4 sm:size-6 stroke-[1.75]" />
+                            <div className="relative flex size-10 sm:size-14 items-center justify-center rounded-full bg-card/90 shadow-xs ring-1 ring-border/80 text-primary transition-transform duration-300 group-hover:scale-110">
+                              <UtensilsCrossed className="size-4 sm:size-6 stroke-[1.75]" />
+                            </div>
+                            <span className="relative mt-2 text-[11px] sm:text-xs font-semibold text-foreground/90 tracking-wide line-clamp-1">
+                              {product.name}
+                            </span>
+                            <span className="relative text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden xs:inline sm:inline">
+                              Món chuẩn vị Nhật Bản
+                            </span>
                           </div>
-                          <span className="relative mt-2 text-[11px] sm:text-xs font-semibold text-foreground/90 tracking-wide line-clamp-1">
-                            {product.name}
-                          </span>
-                          <span className="relative text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden xs:inline sm:inline">
-                            Món chuẩn vị Nhật Bản
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Badges trên ảnh */}
-                      <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex flex-wrap gap-1 sm:gap-1.5 z-10">
-                        {product.type === "COMBO" && (
-                          <Badge className="bg-amber-500 text-white font-bold text-[9px] sm:text-[11px] px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border-none flex items-center gap-1">
-                            <Sparkles className="size-2.5 sm:size-3" />
-                            <span>Combo</span>
-                          </Badge>
                         )}
-                        {product.category?.name && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-background/90 dark:bg-card/90 backdrop-blur-md text-[9px] sm:text-[11px] font-medium text-foreground px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border border-border/60"
-                          >
-                            {product.category.name}
-                          </Badge>
+
+                        {/* Badges trên ảnh */}
+                        <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex flex-wrap gap-1 sm:gap-1.5 z-10">
+                          {product.type === "COMBO" && (
+                            <Badge className="bg-amber-500 text-white font-bold text-[9px] sm:text-[11px] px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border-none flex items-center gap-1">
+                              <Sparkles className="size-2.5 sm:size-3" />
+                              <span>Combo</span>
+                            </Badge>
+                          )}
+                          {product.category?.name && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-background/90 dark:bg-card/90 backdrop-blur-md text-[9px] sm:text-[11px] font-medium text-foreground px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border border-border/60"
+                            >
+                              {product.category.name}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Thông tin món */}
+                      <div className="p-3 sm:p-5 pb-2 sm:pb-3">
+                        <h3 className="text-xs sm:text-base lg:text-lg font-bold text-foreground line-clamp-2 sm:line-clamp-1 group-hover:text-primary transition-colors tracking-tight leading-snug">
+                          {product.name}
+                        </h3>
+                        {product.sku && (
+                          <p className="mt-0.5 text-[10px] font-mono text-muted-foreground/70">
+                            {product.sku}
+                          </p>
                         )}
                       </div>
-                    </div>
-
-                    {/* Thông tin món */}
-                    <div className="p-3 sm:p-5 pb-2 sm:pb-3">
-                      <h3 className="text-xs sm:text-base lg:text-lg font-bold text-foreground line-clamp-2 sm:line-clamp-1 group-hover:text-primary transition-colors tracking-tight leading-snug">
-                        {product.name}
-                      </h3>
-                      {product.sku && (
-                        <p className="mt-0.5 text-[10px] font-mono text-muted-foreground/70">
-                          {product.sku}
-                        </p>
-                      )}
-                    </div>
+                    </Link>
                   </div>
 
                   {/* Giá và nút Thêm vào giỏ */}

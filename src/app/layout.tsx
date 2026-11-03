@@ -1,4 +1,5 @@
 // Sushi Platform Storefront Root Layout - Light mode white background
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -35,6 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${beVietnamPro.variable} ${playfairDisplay.variable} h-full antialiased`}
     >
@@ -45,7 +47,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
+          <Suspense fallback={<div className="h-16 sm:h-20 border-b border-border/70 bg-background/80" />}>
+            <Header />
+          </Suspense>
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
           <ScrollToTopButton />
