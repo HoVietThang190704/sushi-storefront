@@ -83,25 +83,6 @@ const CATEGORIES: CategoryHighlight[] = [
 export function CuratedCategoriesSection() {
   const [sectionRef, isSectionRevealed] = useScrollReveal(0.1);
 
-  const handleCategoryClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    targetCategory?: string
-  ) => {
-    if (targetCategory) {
-      window.dispatchEvent(
-        new CustomEvent("sushi-select-category", {
-          detail: { target: targetCategory },
-        })
-      );
-    }
-
-    const menuEl = document.getElementById("thuc-don");
-    if (menuEl) {
-      e.preventDefault();
-      menuEl.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
     <section
       ref={sectionRef}
@@ -127,7 +108,7 @@ export function CuratedCategoriesSection() {
               THỰC ĐƠN ĐẶC SẮC
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-muted-foreground dark:text-stone-400 max-w-xl">
-              Lựa chọn danh mục yêu thích để chuyển nhanh đến thực đơn đặt món trực tuyến mang về.
+              Lựa chọn danh mục yêu thích để chuyển đến trang thực đơn và đặt món trực tuyến mang về.
             </p>
           </div>
 
@@ -135,7 +116,7 @@ export function CuratedCategoriesSection() {
             href="/menu"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground dark:text-stone-300 dark:hover:text-white transition-colors group shrink-0"
           >
-            <span>Xem thực đơn chi tiết</span>
+            <span>Xem toàn bộ menu</span>
             <ArrowUpRight className="size-4 text-primary dark:text-red-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </div>
@@ -143,10 +124,9 @@ export function CuratedCategoriesSection() {
         {/* 6 Category Tiles Grid (2 cols mobile, 2 cols tablet, 3 cols desktop) */}
         <div className="mt-6 sm:mt-8 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {CATEGORIES.map((item) => (
-            <a
+            <Link
               key={item.id}
-              href="#thuc-don"
-              onClick={(e) => handleCategoryClick(e, item.targetCategory)}
+              href={`/menu?category=${encodeURIComponent(item.targetCategory || "")}`}
               className={cn(
                 "group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-xs transition-all duration-500 ease-out hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 dark:border-stone-800/80 dark:bg-stone-900/60 dark:shadow-md dark:hover:translate-y-0 dark:hover:border-red-500/50 dark:hover:bg-stone-900 dark:hover:shadow-xl dark:hover:shadow-red-950/20",
                 "motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
@@ -192,7 +172,7 @@ export function CuratedCategoriesSection() {
                   <ArrowUpRight className="size-3 sm:size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
