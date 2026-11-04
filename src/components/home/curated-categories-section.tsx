@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { cn } from "@/lib/utils";
 
 interface CategoryHighlight {
   id: string;
@@ -12,6 +14,7 @@ interface CategoryHighlight {
   desc: string;
   image: string;
   targetCategory?: string;
+  delayClass: string;
 }
 
 const CATEGORIES: CategoryHighlight[] = [
@@ -23,6 +26,7 @@ const CATEGORIES: CategoryHighlight[] = [
     image:
       "https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&w=800&q=80",
     targetCategory: "sashimi",
+    delayClass: "delay-75",
   },
   {
     id: "sushi",
@@ -32,6 +36,7 @@ const CATEGORIES: CategoryHighlight[] = [
     image:
       "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?auto=format&fit=crop&w=800&q=80",
     targetCategory: "nigiri",
+    delayClass: "delay-100",
   },
   {
     id: "combo",
@@ -41,6 +46,7 @@ const CATEGORIES: CategoryHighlight[] = [
     image:
       "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=80",
     targetCategory: "roll",
+    delayClass: "delay-150",
   },
   {
     id: "grilled",
@@ -50,6 +56,7 @@ const CATEGORIES: CategoryHighlight[] = [
     image:
       "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80",
     targetCategory: "entrée",
+    delayClass: "delay-200",
   },
   {
     id: "rice-noodle",
@@ -59,6 +66,7 @@ const CATEGORIES: CategoryHighlight[] = [
     image:
       "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80",
     targetCategory: "cơm",
+    delayClass: "delay-250",
   },
   {
     id: "dessert",
@@ -68,34 +76,29 @@ const CATEGORIES: CategoryHighlight[] = [
     image:
       "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80",
     targetCategory: "uống",
+    delayClass: "delay-300",
   },
 ];
 
 export function CuratedCategoriesSection() {
-  const handleCategoryClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    targetCategory?: string
-  ) => {
-    if (targetCategory) {
-      window.dispatchEvent(
-        new CustomEvent("sushi-select-category", {
-          detail: { target: targetCategory },
-        })
-      );
-    }
-
-    const menuEl = document.getElementById("thuc-don");
-    if (menuEl) {
-      e.preventDefault();
-      menuEl.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const [sectionRef, isSectionRevealed] = useScrollReveal(0.1);
 
   return (
-    <section className="relative overflow-hidden py-14 md:py-20 bg-background text-foreground border-b border-border/70 dark:bg-[#0a0b0d] dark:text-stone-100 dark:border-stone-800/80">
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden py-14 md:py-20 bg-background text-foreground border-b border-border/70 dark:bg-[#0a0b0d] dark:text-stone-100 dark:border-stone-800/80"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end border-b border-border/60 dark:border-stone-800/70 pb-6">
+        <div
+          className={cn(
+            "flex flex-col items-start justify-between gap-4 md:flex-row md:items-end border-b border-border/60 dark:border-stone-800/70 pb-6",
+            "transition-all duration-700 ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+            isSectionRevealed
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-6"
+          )}
+        >
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-primary dark:text-red-400">
               <span className="h-0.5 w-6 bg-primary dark:bg-red-500" />
@@ -105,7 +108,7 @@ export function CuratedCategoriesSection() {
               THỰC ĐƠN ĐẶC SẮC
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-muted-foreground dark:text-stone-400 max-w-xl">
-              Lựa chọn danh mục yêu thích để chuyển nhanh đến thực đơn đặt món trực tuyến mang về.
+              Lựa chọn danh mục yêu thích để chuyển đến trang thực đơn và đặt món trực tuyến mang về.
             </p>
           </div>
 
@@ -113,7 +116,7 @@ export function CuratedCategoriesSection() {
             href="/menu"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground dark:text-stone-300 dark:hover:text-white transition-colors group shrink-0"
           >
-            <span>Xem thực đơn chi tiết</span>
+            <span>Xem toàn bộ menu</span>
             <ArrowUpRight className="size-4 text-primary dark:text-red-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </div>
@@ -121,11 +124,17 @@ export function CuratedCategoriesSection() {
         {/* 6 Category Tiles Grid (2 cols mobile, 2 cols tablet, 3 cols desktop) */}
         <div className="mt-6 sm:mt-8 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {CATEGORIES.map((item) => (
-            <a
+            <Link
               key={item.id}
-              href="#thuc-don"
-              onClick={(e) => handleCategoryClick(e, item.targetCategory)}
-              className="group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 dark:border-stone-800/80 dark:bg-stone-900/60 dark:shadow-md dark:hover:translate-y-0 dark:hover:border-red-500/50 dark:hover:bg-stone-900 dark:hover:shadow-xl dark:hover:shadow-red-950/20"
+              href={`/menu?category=${encodeURIComponent(item.targetCategory || "")}`}
+              className={cn(
+                "group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-xs transition-all duration-500 ease-out hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 dark:border-stone-800/80 dark:bg-stone-900/60 dark:shadow-md dark:hover:translate-y-0 dark:hover:border-red-500/50 dark:hover:bg-stone-900 dark:hover:shadow-xl dark:hover:shadow-red-950/20",
+                "motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100",
+                item.delayClass,
+                isSectionRevealed
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              )}
             >
               {/* Image Frame */}
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/30 dark:bg-stone-950">
@@ -163,7 +172,7 @@ export function CuratedCategoriesSection() {
                   <ArrowUpRight className="size-3 sm:size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

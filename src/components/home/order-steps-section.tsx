@@ -1,4 +1,6 @@
-import { ShoppingBag, Store, Clock } from "lucide-react";
+import Link from "next/link";
+import { ShoppingBag, Store, Clock, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function OrderStepsSection() {
   const steps = [
@@ -67,6 +69,16 @@ export function OrderStepsSection() {
               </div>
             );
           })}
+        </div>
+
+        {/* Nút hành động dẫn trực tiếp sang trang Thực đơn */}
+        <div className="mt-10 sm:mt-12 text-center">
+          <Button asChild size="lg" className="rounded-xl px-7 font-semibold shadow-md gap-2">
+            <Link href="/menu">
+              <span>Khám phá thực đơn & Đặt món ngay</span>
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
