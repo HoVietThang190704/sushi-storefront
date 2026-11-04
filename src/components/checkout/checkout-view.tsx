@@ -129,8 +129,9 @@ export function CheckoutView() {
       clearCart();
       toast.success("Đặt món thành công!");
 
+      const orderCode = res.order.code || res.order.orderCode || "ORD-SUCCESS";
       const params = new URLSearchParams({
-        code: res.order.orderCode,
+        code: orderCode,
         ...(res.trackingToken ? { token: res.trackingToken } : {}),
       });
 

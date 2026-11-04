@@ -127,7 +127,8 @@ export interface CreateOrderPayload {
 export interface CreatedOrderResponse {
   order: {
     id: string;
-    orderCode: string;
+    code: string;
+    orderCode?: string;
     customerName: string;
     customerPhone: string;
     totalAmount: string | number;
@@ -167,7 +168,8 @@ export async function createOrder(
 
 export interface TrackOrderResponse {
   id: string;
-  orderCode: string;
+  code: string;
+  orderCode?: string;
   customerName: string;
   customerPhone: string;
   customerEmail?: string | null;
