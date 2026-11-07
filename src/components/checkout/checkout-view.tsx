@@ -73,6 +73,7 @@ export function CheckoutView() {
   // Modal / Sheet tìm kiếm Phường/Xã (Tên mới & Tên cũ)
   const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
   const [searchWardQuery, setSearchWardQuery] = React.useState("");
+  const [wardFilterTab, setWardFilterTab] = React.useState<"all" | "supported">("all");
 
   // Dữ liệu vị trí & phí ship
   const [locations, setLocations] = React.useState<WardLocationItem[]>([]);
@@ -101,11 +102,16 @@ export function CheckoutView() {
     };
   }, []);
 
-  // Danh sách các Phường/Xã lọc theo ô tìm kiếm (tìm theo tên mới hoặc tên cũ)
+  // Danh sách các Phường/Xã lọc theo ô tìm kiếm (tìm theo tên mới hoặc tên cũ) và tab lọc
   const filteredWards = React.useMemo(() => {
+    let list = locations;
+    if (wardFilterTab === "supported") {
+      list = list.filter((l) => l.isSupported);
+    }
+
     const q = searchWardQuery.trim().toLowerCase();
     if (!q) {
-      return locations.slice().sort((a, b) => {
+      return list.slice().sort((a, b) => {
         // Đưa các phường có giao hàng lên trước
         if (a.isSupported !== b.isSupported) {
           return a.isSupported ? -1 : 1;
@@ -114,7 +120,7 @@ export function CheckoutView() {
       });
     }
 
-    return locations
+    return list
       .filter((loc) => {
         const matchName = loc.ward.toLowerCase().includes(q);
         const matchFormer = loc.formerWards
@@ -131,7 +137,12 @@ export function CheckoutView() {
         }
         return a.ward.localeCompare(b.ward, "vi");
       });
-  }, [locations, searchWardQuery]);
+  }, [locations, searchWardQuery, wardFilterTab]);
+
+  // Số lượng phường/xã có hỗ trợ giao hàng
+  const supportedWardsCount = React.useMemo(() => {
+    return locations.filter((l) => l.isSupported).length;
+  }, [locations]);
 
   // Thông tin Phường/Xã hiện tại được chọn
   const currentWardInfo = React.useMemo(() => {
@@ -366,28 +377,33 @@ export function CheckoutView() {
               router.push("/cart");
             }
           }}
-          className="size-10 flex items-center justify-center -ml-1 text-foreground/80 hover:text-foreground active:scale-90 transition-all rounded-full"
+          className="size-9 flex items-center justify-center text-foreground/80 hover:text-foreground active:scale-95 transition-all rounded-full bg-muted/40"
           aria-label={step === 2 ? "Quay lại bước 1" : "Quay lại giỏ hàng"}
         >
-          <ChevronLeft className="size-6 stroke-[2]" />
+          <ChevronLeft className="size-5 stroke-[2.2]" />
         </button>
-        <h1 className="font-semibold text-sm sm:text-base text-foreground tracking-tight select-none truncate max-w-[200px]">
-          {step === 1 ? "Địa chỉ giao hàng (TP.HCM)" : "Xác nhận & Thanh toán"}
-        </h1>
-        <div className="size-10 flex items-center justify-center -mr-1">
-          <span className="text-[11px] font-semibold text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-full font-mono">
+        <div className="text-center px-2">
+          <h1 className="font-bold text-sm text-foreground tracking-tight leading-tight">
+            {step === 1 ? "Giao hàng tận nơi" : "Thanh toán đơn hàng"}
+          </h1>
+          <p className="text-[10px] text-muted-foreground font-medium">
+            {step === 1 ? "TP. Hồ Chí Minh" : "Xác nhận & Hoàn tất"}
+          </p>
+        </div>
+        <div className="size-9 flex items-center justify-center">
+          <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full font-mono">
             {step}/2
           </span>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 pt-3 sm:pt-10">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 pt-3 sm:pt-8">
         {/* ==================== ACCORDION TÓM TẮT ĐƠN HÀNG (MOBILE) ==================== */}
-        <div className="lg:hidden mb-4 rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs">
+        <div className="lg:hidden mb-3 rounded-xl border border-border/70 bg-card overflow-hidden shadow-2xs">
           <button
             type="button"
             onClick={() => setShowMobileSummary(!showMobileSummary)}
-            className="w-full px-3.5 py-3 flex items-center justify-between text-xs font-semibold bg-muted/20 hover:bg-muted/30 active:bg-muted/40 transition-colors"
+            className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-semibold bg-muted/25 hover:bg-muted/35 active:bg-muted/40 transition-colors"
           >
             <div className="flex items-center gap-1.5 text-primary font-medium">
               <ShoppingBag className="size-3.5" />
@@ -465,7 +481,26 @@ export function CheckoutView() {
         </div>
 
         {/* ==================== STEPPER THANH TIẾN TRÌNH ==================== */}
-        <div className="flex items-center justify-center gap-2 sm:gap-6 pb-4 sm:pb-6 mb-5 sm:mb-8 border-b border-border/70">
+        {/* Mobile: thanh tiến trình mảnh tinh gọn */}
+        <div className="sm:hidden mb-4 px-1">
+          <div className="flex items-center justify-between text-2xs font-semibold text-muted-foreground mb-1.5">
+            <span className={step === 1 ? "text-primary font-bold" : "text-muted-foreground"}>
+              1. Địa chỉ nhận
+            </span>
+            <span className={step === 2 ? "text-primary font-bold" : "text-muted-foreground"}>
+              2. Thanh toán
+            </span>
+          </div>
+          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden flex">
+            <div
+              className="bg-primary h-full transition-all duration-300 rounded-full"
+              style={{ width: step === 1 ? "50%" : "100%" }}
+            />
+          </div>
+        </div>
+
+        {/* Desktop: Stepper chuẩn lớn */}
+        <div className="hidden sm:flex items-center justify-center gap-6 pb-6 mb-8 border-b border-border/70">
           <button
             type="button"
             onClick={() => setStep(1)}
@@ -474,21 +509,18 @@ export function CheckoutView() {
             }`}
           >
             <div
-              className={`size-6 sm:size-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+              className={`size-7 sm:size-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
                 step === 1
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               }`}
             >
-              {step === 2 ? <Check className="size-3.5 sm:size-4 stroke-[3]" /> : "1"}
+              {step === 2 ? <Check className="size-4 stroke-[3]" /> : "1"}
             </div>
-            <span>
-              <span className="sm:hidden">1. Địa chỉ giao</span>
-              <span className="hidden sm:inline">1. Địa chỉ nhận hàng</span>
-            </span>
+            <span>1. Địa chỉ nhận hàng</span>
           </button>
 
-          <div className="h-px w-6 sm:w-16 bg-border shrink-0" />
+          <div className="h-px w-12 sm:w-16 bg-border shrink-0" />
 
           <div
             className={`flex items-center gap-2 text-xs sm:text-sm font-semibold transition-colors shrink-0 ${
@@ -496,7 +528,7 @@ export function CheckoutView() {
             }`}
           >
             <div
-              className={`size-6 sm:size-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+              className={`size-7 sm:size-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
                 step === 2
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-muted text-muted-foreground border border-border/70"
@@ -504,10 +536,7 @@ export function CheckoutView() {
             >
               2
             </div>
-            <span>
-              <span className="sm:hidden">2. Thanh toán</span>
-              <span className="hidden sm:inline">2. Thanh toán & Xác nhận</span>
-            </span>
+            <span>2. Thanh toán & Xác nhận</span>
           </div>
         </div>
 
@@ -518,18 +547,18 @@ export function CheckoutView() {
             {step === 1 && (
               <form onSubmit={handleProceedToPayment} className="space-y-4 sm:space-y-6">
                 <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-7 shadow-xs space-y-4 sm:space-y-5">
-                  <div className="pb-3 sm:pb-4 border-b border-border/60 flex items-start justify-between gap-3">
+                  <div className="pb-3 sm:pb-4 border-b border-border/60 flex items-center justify-between gap-3">
                     <div>
                       <h2 className="font-bold text-base sm:text-lg font-serif text-foreground">
-                        Thông Tin Giao Hàng Tận Nơi
+                        Thông tin người nhận
                       </h2>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
                         Phục vụ giao hàng nhanh trong phạm vi khu vực TP. Hồ Chí Minh
                       </p>
                     </div>
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 shrink-0 text-[11px] gap-1">
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 shrink-0 text-3xs sm:text-[11px] gap-1 font-medium">
                       <Truck className="size-3" />
-                      <span>Ship tận nơi</span>
+                      <span>Giao tận nơi</span>
                     </Badge>
                   </div>
 
@@ -570,25 +599,10 @@ export function CheckoutView() {
 
                   {/* Khối chọn địa chỉ Phường/Xã (Đúng chuẩn UX hiện đại) */}
                   <div className="space-y-1.5 pt-1">
-                    <label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="size-3.5 text-primary" />
-                        <span>Khu vực giao hàng (Phường / Xã TP.HCM)</span>
-                        <span className="text-destructive">*</span>
-                      </span>
-                      {selectedWard && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSearchWardQuery("");
-                            setIsAddressModalOpen(true);
-                          }}
-                          className="text-2xs text-primary font-medium hover:underline flex items-center gap-0.5"
-                        >
-                          <Edit3 className="size-3" />
-                          <span>Đổi phường/xã</span>
-                        </button>
-                      )}
+                    <label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                      <MapPin className="size-3.5 text-primary" />
+                      <span>Khu vực giao hàng (Phường / Xã TP.HCM)</span>
+                      <span className="text-destructive">*</span>
                     </label>
 
                     {!selectedWard ? (
@@ -596,13 +610,14 @@ export function CheckoutView() {
                         type="button"
                         onClick={() => {
                           setSearchWardQuery("");
+                          setWardFilterTab("all");
                           setIsAddressModalOpen(true);
                         }}
                         className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 active:scale-[0.99] transition-all flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                            <MapPin className="size-4" />
+                          <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <MapPin className="size-4.5" />
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -613,14 +628,16 @@ export function CheckoutView() {
                             </p>
                           </div>
                         </div>
-                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                       </button>
                     ) : (
-                      <div className="p-3.5 rounded-xl border border-border/80 bg-muted/20 flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2.5">
-                          <MapPin className="size-4 text-primary shrink-0 mt-0.5" />
-                          <div>
-                            <div className="flex items-center gap-2">
+                      <div className="p-3 sm:p-3.5 rounded-xl border border-border/80 bg-muted/20 flex items-center justify-between gap-3 transition-colors hover:border-primary/40">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                            <MapPin className="size-4" />
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-bold text-foreground">
                                 {selectedWard}
                               </span>
@@ -634,28 +651,91 @@ export function CheckoutView() {
                                 </Badge>
                               )}
                             </div>
-                            {currentWardInfo?.formerWards && (
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                Trước đây: {currentWardInfo.formerWards}
+                            {currentWardInfo?.district && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {currentWardInfo.district}
+                                {currentWardInfo.formerWards && (
+                                  <span className="text-muted-foreground/75 font-normal"> • Cũ: {currentWardInfo.formerWards}</span>
+                                )}
                               </p>
                             )}
                           </div>
                         </div>
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             setSearchWardQuery("");
+                            setWardFilterTab("all");
                             setIsAddressModalOpen(true);
                           }}
-                          className="h-8 text-xs text-primary hover:text-primary px-2"
+                          className="h-8 text-xs font-semibold text-primary border-primary/30 hover:bg-primary/10 px-2.5 shrink-0 rounded-lg"
                         >
-                          Đổi
+                          <Edit3 className="size-3 mr-1" />
+                          <span>Đổi</span>
                         </Button>
                       </div>
                     )}
                   </div>
+
+                  {/* Hiển thị chi nhánh phục vụ & Phí ship tính được */}
+                  {selectedWard && (
+                    <div className="transition-all">
+                      {calculatingFee ? (
+                        <div className="flex items-center gap-2 text-muted-foreground py-2 text-xs">
+                          <Loader2 className="size-4 animate-spin text-primary" />
+                          <span>Đang kiểm tra chi nhánh phục vụ và tính phí giao hàng...</span>
+                        </div>
+                      ) : currentWardInfo && !currentWardInfo.isSupported ? (
+                        <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 p-3 sm:p-3.5 space-y-1 text-xs">
+                          <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold">
+                            <AlertCircle className="size-4 shrink-0" />
+                            <span>Khu vực này hiện chưa được hỗ trợ giao tận nơi</span>
+                          </div>
+                          <p className="text-2xs text-muted-foreground leading-relaxed pl-6">
+                            <strong>{selectedWard}</strong> nằm ngoài bán kính phục vụ của Hanbi Sushi. Quý khách vui lòng chọn địa chỉ lân cận hoặc đặt nhận tại quầy (Take Away).
+                          </p>
+                        </div>
+                      ) : shippingCalc ? (
+                        <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 sm:p-3.5 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 font-medium text-foreground">
+                              <Store className="size-3.5 text-primary shrink-0" />
+                              <span>Chi nhánh giao:</span>
+                              <span className="font-semibold text-primary">{shippingCalc.branch?.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1 font-mono font-bold text-primary text-sm">
+                              <span>{formatPrice(shippingCalc.fee)}</span>
+                            </div>
+                          </div>
+
+                          {/* Nếu khu vực có nhiều hơn 1 chi nhánh hỗ trợ, cho khách đổi chi nhánh */}
+                          {currentWardInfo && currentWardInfo.supportedBranches.length > 1 && (
+                            <div className="pt-2 border-t border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-2xs">
+                              <span className="text-muted-foreground">Đổi chi nhánh:</span>
+                              <select
+                                value={selectedBranchId || shippingCalc.branch?.id}
+                                onChange={(e) => setSelectedBranchId(e.target.value)}
+                                className="rounded-lg h-7.5 px-2 text-xs bg-background border border-border shadow-2xs"
+                              >
+                                {currentWardInfo.supportedBranches.map((b) => (
+                                  <option key={b.id} value={b.id}>
+                                    {b.name} ({formatPrice(b.fee)})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-destructive font-medium py-1 text-xs">
+                          <AlertCircle className="size-4 shrink-0" />
+                          <span>Không tìm thấy thông tin phục vụ cho khu vực này.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Địa chỉ chi tiết */}
                   <div className="space-y-1.5">
@@ -673,70 +753,6 @@ export function CheckoutView() {
                       className="rounded-xl h-11 text-base sm:text-sm"
                     />
                   </div>
-
-                  {/* Hiển thị chi nhánh phục vụ & Phí ship tính được */}
-                  {selectedWard && (
-                    <div className="rounded-xl border p-3.5 space-y-2 text-xs transition-all">
-                      {calculatingFee ? (
-                        <div className="flex items-center gap-2 text-muted-foreground py-1">
-                          <Loader2 className="size-4 animate-spin text-primary" />
-                          <span>Đang kiểm tra chi nhánh phục vụ và tính phí giao hàng...</span>
-                        </div>
-                      ) : currentWardInfo && !currentWardInfo.isSupported ? (
-                        <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 space-y-1.5">
-                          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-semibold">
-                            <AlertCircle className="size-4 shrink-0" />
-                            <span>Khu vực này hiện chưa được hỗ trợ giao hàng tận nơi</span>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
-                            <strong>{selectedWard}</strong> nằm ngoài bán kính phục vụ hiện tại của các chi nhánh Hanbi Sushi. Quý khách vui lòng chọn địa chỉ khác hoặc đặt nhận tại quầy.
-                          </p>
-                        </div>
-                      ) : shippingCalc ? (
-                        <div className="space-y-2 bg-primary/5 border border-primary/20 rounded-lg p-3">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-foreground flex items-center gap-1.5">
-                              <Store className="size-4 text-primary" />
-                              <span>Chi nhánh phục vụ:</span>
-                            </span>
-                            <span className="font-medium text-primary">
-                              {shippingCalc.branch?.name}
-                            </span>
-                          </div>
-
-                          {/* Nếu khu vực có nhiều hơn 1 chi nhánh hỗ trợ, cho khách đổi chi nhánh */}
-                          {currentWardInfo && currentWardInfo.supportedBranches.length > 1 && (
-                            <div className="pt-1.5 border-t border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                              <span className="text-muted-foreground">Đổi chi nhánh khác:</span>
-                              <select
-                                value={selectedBranchId || shippingCalc.branch?.id}
-                                onChange={(e) => setSelectedBranchId(e.target.value)}
-                                className="rounded-lg h-8 px-2 text-xs bg-card border border-border"
-                              >
-                                {currentWardInfo.supportedBranches.map((b) => (
-                                  <option key={b.id} value={b.id}>
-                                    {b.name} ({formatPrice(b.fee)})
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between pt-1 border-t border-primary/10 font-medium">
-                            <span className="text-muted-foreground">Phí giao hàng dự kiến:</span>
-                            <span className="font-mono text-sm font-bold text-primary">
-                              {formatPrice(shippingCalc.fee)}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-destructive font-medium py-1">
-                          <AlertCircle className="size-4 shrink-0" />
-                          <span>Không tìm thấy thông tin phục vụ cho khu vực này.</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-foreground flex items-center gap-1">
@@ -1099,17 +1115,27 @@ export function CheckoutView() {
       {isAddressModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div
-            className="w-full max-w-lg bg-card border border-border/80 shadow-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[88vh] sm:max-h-[80vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
+            className="w-full max-w-lg bg-card border border-border/80 shadow-2xl rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[90vh] sm:max-h-[82vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
             role="dialog"
             aria-modal="true"
           >
+            {/* Thanh kéo vuốt trên mobile */}
+            <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto my-2.5 shrink-0 sm:hidden" />
+
             {/* Header Modal */}
-            <div className="px-4 py-3.5 border-b border-border/60 flex items-center justify-between shrink-0 bg-muted/20">
+            <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between shrink-0 bg-muted/20">
               <div className="flex items-center gap-2">
-                <MapPin className="size-4 text-primary" />
-                <h3 className="font-bold text-sm sm:text-base text-foreground">
-                  Chọn Phường / Xã TP.HCM
-                </h3>
+                <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <MapPin className="size-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-foreground">
+                    Chọn Phường / Xã TP.HCM
+                  </h3>
+                  <p className="text-3xs text-muted-foreground">
+                    Chuẩn 168 đơn vị hành chính & tra cứu tên cũ
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
@@ -1121,14 +1147,14 @@ export function CheckoutView() {
               </button>
             </div>
 
-            {/* Ô tìm kiếm thông minh */}
-            <div className="p-3.5 border-b border-border/60 shrink-0 bg-card space-y-2">
+            {/* Ô tìm kiếm thông minh & Tabs lọc */}
+            <div className="p-3 sm:p-3.5 border-b border-border/60 shrink-0 bg-card space-y-2.5">
               <div className="relative">
                 <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <Input
                   type="text"
                   autoFocus
-                  placeholder="Tìm theo tên phường mới hoặc tên cũ (VD: Bến Nghé, Đa Kao, Sài Gòn...)"
+                  placeholder="Tìm tên mới hoặc tên cũ (Bến Nghé, Đa Kao, Võ Thị Sáu...)"
                   value={searchWardQuery}
                   onChange={(e) => setSearchWardQuery(e.target.value)}
                   className="pl-9.5 pr-8 h-10.5 rounded-xl text-sm bg-muted/30 focus-visible:bg-background"
@@ -1138,25 +1164,76 @@ export function CheckoutView() {
                     type="button"
                     onClick={() => setSearchWardQuery("")}
                     className="size-6 absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Xóa tìm kiếm"
                   >
                     <X className="size-3.5" />
                   </button>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-2xs text-muted-foreground px-1">
-                <span>TP. Hồ Chí Minh ({filteredWards.length} đơn vị)</span>
-                <span>Hỗ trợ tra cứu theo tên cũ</span>
+              {/* Tabs lọc: Tất cả vs Có giao hàng */}
+              <div className="flex items-center gap-1.5 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setWardFilterTab("all")}
+                  className={cn(
+                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all",
+                    wardFilterTab === "all"
+                      ? "bg-primary text-primary-foreground shadow-xs"
+                      : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  Tất cả ({locations.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWardFilterTab("supported")}
+                  className={cn(
+                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1",
+                    wardFilterTab === "supported"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Có giao hàng ({supportedWardsCount})</span>
+                </button>
+              </div>
+
+              {/* Gợi ý tìm nhanh 1-chạm */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-2xs text-muted-foreground">
+                <span className="shrink-0 text-muted-foreground/70">Gợi ý:</span>
+                {["Bến Nghé", "Đa Kao", "Võ Thị Sáu", "Thảo Điền", "An Khánh", "Tân Định"].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setSearchWardQuery(tag)}
+                    className="px-2 py-0.5 rounded-md bg-muted/40 hover:bg-muted text-foreground/80 hover:text-primary shrink-0 transition-colors border border-border/40"
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Danh sách Phường / Xã */}
-            <div className="flex-1 overflow-y-auto divide-y divide-border/40 p-1">
+            <div className="flex-1 overflow-y-auto divide-y divide-border/40 p-1.5">
               {filteredWards.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground space-y-2">
                   <MapPin className="size-8 mx-auto text-muted-foreground/40" />
                   <p className="text-sm font-medium">Không tìm thấy phường/xã nào phù hợp</p>
-                  <p className="text-xs">Hãy thử tìm theo tên phường mới hoặc tên phường cũ trước đây</p>
+                  <p className="text-xs">Hãy thử tìm theo tên phường mới hoặc tên phường/quận cũ</p>
+                  {wardFilterTab === "supported" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setWardFilterTab("all")}
+                      className="mt-2 text-xs"
+                    >
+                      Xem tất cả 168 phường/xã
+                    </Button>
+                  )}
                 </div>
               ) : (
                 filteredWards.map((w) => {
@@ -1172,13 +1249,13 @@ export function CheckoutView() {
                         setIsAddressModalOpen(false);
                       }}
                       className={cn(
-                        "w-full text-left px-3.5 py-3 rounded-lg flex items-start justify-between gap-3 transition-colors",
+                        "w-full text-left px-3.5 py-3 rounded-xl flex items-start justify-between gap-3 transition-colors",
                         isSelected
-                          ? "bg-primary/10 border-l-3 border-primary"
+                          ? "bg-primary/10 border border-primary/30"
                           : "hover:bg-muted/40 active:bg-muted/60"
                       )}
                     >
-                      <div className="space-y-0.5 min-w-0 flex-1">
+                      <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
                             className={cn(
@@ -1189,25 +1266,28 @@ export function CheckoutView() {
                             {w.ward}
                           </span>
                           {w.isSupported ? (
-                            <span className="text-3xs px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                            <span className="text-3xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                               Có giao hàng
                             </span>
                           ) : (
-                            <span className="text-3xs px-1.5 py-0.5 rounded font-medium bg-muted text-muted-foreground shrink-0">
+                            <span className="text-3xs px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground shrink-0">
                               Chưa hỗ trợ
                             </span>
                           )}
                         </div>
 
-                        {w.formerWards && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            Trước đây: <span className="text-foreground/80">{w.formerWards}</span>
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {w.district}
+                          {w.formerWards && (
+                            <span className="text-muted-foreground/80"> • Trước đây: {w.formerWards}</span>
+                          )}
+                        </p>
                       </div>
 
                       {isSelected && (
-                        <Check className="size-4 text-primary shrink-0 mt-1" />
+                        <div className="size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="size-3.5 stroke-[3]" />
+                        </div>
                       )}
                     </button>
                   );
@@ -1216,8 +1296,9 @@ export function CheckoutView() {
             </div>
 
             {/* Footer Modal */}
-            <div className="p-3 border-t border-border/60 shrink-0 bg-muted/20 text-center text-2xs text-muted-foreground">
-              Nhấp vào phường/xã để chọn và tự động tính phí vận chuyển
+            <div className="p-3 border-t border-border/60 shrink-0 bg-muted/20 flex items-center justify-between text-2xs text-muted-foreground px-4">
+              <span>Đang hiển thị {filteredWards.length} kết quả</span>
+              <span>Bấm vào để chọn</span>
             </div>
           </div>
         </div>
