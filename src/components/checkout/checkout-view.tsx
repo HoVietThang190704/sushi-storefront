@@ -167,19 +167,23 @@ export function CheckoutView() {
     async function updateFee() {
       setCalculatingFee(true);
       try {
+        // Chỉ gửi branchId nếu chi nhánh đó thực sự nằm trong danh sách hỗ trợ của ward này
+        const isBranchValid =
+          selectedBranchId &&
+          currentWardInfo?.supportedBranches?.some((b) => b.id === selectedBranchId);
+        const branchToSend = isBranchValid ? selectedBranchId : undefined;
+
         const res = await calculateShippingFee({
           district: selectedDistrict || currentWardInfo?.district,
           ward: selectedWard,
-          branchId: selectedBranchId || undefined,
+          branchId: branchToSend,
         });
         if (active) {
           setShippingCalc(res);
-          if (!selectedBranchId && res.branch?.id) {
-            setSelectedBranchId(res.branch.id);
-          }
         }
       } catch (err) {
         if (active) {
+          console.error("calculateShippingFee error:", err);
           setShippingCalc(null);
         }
       } finally {
