@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Phone, MapPin, Clock } from "lucide-react";
@@ -8,6 +9,14 @@ import { cn } from "@/lib/utils";
 
 export function Footer() {
   const pathname = usePathname();
+
+  // Tránh hydration mismatch khi server render và client render có route pathname khác nhau
+  const isMounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   const isMinimalMobile =
     pathname === "/cart" ||
     pathname === "/checkout" ||
@@ -17,9 +26,10 @@ export function Footer() {
 
   return (
     <footer
+      suppressHydrationWarning
       className={cn(
         "border-t border-border/60 bg-card text-foreground",
-        isMinimalMobile && "hidden sm:block"
+        isMounted && isMinimalMobile && "hidden sm:block"
       )}
     >
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
