@@ -30,6 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCartStore } from "@/lib/cart-store";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -67,12 +68,17 @@ export function Header() {
     pathname === "/checkout" ||
     pathname === "/order-success";
 
+  // Theo dõi hướng cuộn trang để tự động ẩn Header khi cuộn xuống và hiện lại khi cuộn lên trên mobile
+  const isScrollVisible = useScrollDirection({ threshold: 12 });
+  const shouldShowHeader = isScrollVisible || isSearchOpen || mobileMenuOpen;
+
   return (
     <header
       suppressHydrationWarning
       className={cn(
-        "sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
-        isMounted && isMinimalMobile && "hidden sm:block"
+        "sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 transition-transform duration-300 ease-in-out will-change-transform",
+        isMounted && isMinimalMobile && "hidden sm:block",
+        !shouldShowHeader && "-translate-y-full md:translate-y-0"
       )}
     >
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

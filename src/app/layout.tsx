@@ -5,6 +5,7 @@ import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { BottomNav } from "@/components/layout/bottom-nav";
 import { Toaster } from "@/components/ui/sonner";
 import { ScrollToTopButton } from "@/components/ui/scroll-to-top";
 import "./globals.css";
@@ -50,9 +51,12 @@ export default function RootLayout({
           <Suspense fallback={<div className="h-16 sm:h-20 border-b border-border/70 bg-background/80" />}>
             <Header />
           </Suspense>
-          <main className="flex-1 flex flex-col">{children}</main>
+          <main className="flex-1 flex flex-col pb-16 md:pb-0">{children}</main>
           <Suspense fallback={null}>
             <Footer />
+          </Suspense>
+          <Suspense fallback={null}>
+            <BottomNav />
           </Suspense>
           <Suspense fallback={null}>
             <ScrollToTopButton />
