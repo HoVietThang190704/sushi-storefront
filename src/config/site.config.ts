@@ -4,7 +4,7 @@ export const SITE_CONFIG = {
   brandSubtitle: "HANBI SIGNATURE SUSHI • 厳選江戸前寿司",
   slogan: "Thưởng Thức Sushi Nhật Bản Chuẩn Vị",
   description:
-    "Đặt món sushi trực tuyến mang đi (Take Away) nhanh chóng, tiện lợi và tươi ngon mỗi ngày",
+    "Đặt món sushi trực tuyến giao hàng tận nơi nhanh chóng, tiện lợi và tươi ngon mỗi ngày",
   hotline: "1900 8888",
 } as const;
 
