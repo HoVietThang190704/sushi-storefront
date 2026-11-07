@@ -14,11 +14,32 @@ import {
   Clock,
   Sparkles,
   ArrowRight,
+  Truck,
+  XCircle,
   Home as HomeIcon,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { trackOrder, TrackOrderResponse } from "@/lib/api";
+import { io, Socket } from "socket.io-client";
+
+function getDeliveryStep(status?: string): number {
+  switch (status) {
+    case "PENDING":
+      return 0; // Đã nhận / Chờ xác nhận
+    case "CONFIRMED":
+    case "PREPARING":
+      return 1; // Chế biến
+    case "READY_FOR_PICKUP":
+      return 2; // Đóng gói
+    case "DELIVERING":
+    case "COMPLETED":
+      return 3; // Giao hàng
+    default:
+      return 0;
+  }
+}
 
 export function OrderSuccessView() {
   const searchParams = useSearchParams();
@@ -26,12 +47,79 @@ export function OrderSuccessView() {
   const token = searchParams.get("token") || "";
   const [copied, setCopied] = React.useState(false);
 
+  // Trạng thái đơn hàng thực tế & realtime
+  const [order, setOrder] = React.useState<TrackOrderResponse | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  // 1. Tải trạng thái ban đầu của đơn hàng
+  const loadOrderDetail = React.useCallback(async (silent = false) => {
+    if (!orderCode || orderCode === "ORD-PENDING" || !token) return;
+    if (!silent) setLoading(true);
+
+    try {
+      const data = await trackOrder(orderCode, token);
+      setOrder(data);
+    } catch (err) {
+      console.warn("Could not fetch order status on success page:", err);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [orderCode, token]);
+
+  React.useEffect(() => {
+    loadOrderDetail(false);
+  }, [loadOrderDetail]);
+
+  // 2. Kết nối WebSocket để cập nhật Realtime khi quầy bếp chuyển trạng thái
+  React.useEffect(() => {
+    if (!orderCode || orderCode === "ORD-PENDING") return;
+    if (!order?.trackingTicket) return;
+
+    if (order.status === "COMPLETED" || order.status === "CANCELLED") return;
+
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== "undefined"
+        ? `${window.location.protocol}//${window.location.hostname}:3000`
+        : "http://localhost:3000");
+
+    const socket: Socket = io(`${socketUrl}/realtime`, {
+      auth: {
+        token: order.trackingTicket,
+      },
+      withCredentials: false,
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+    });
+
+    socket.on("order:updated", (data: { orderCode?: string; status?: string }) => {
+      if (data?.orderCode === orderCode) {
+        toast.info("Tiến trình đơn hàng vừa được cập nhật!", {
+          description: `Đơn ${orderCode} đã chuyển trạng thái mới.`,
+        });
+        loadOrderDetail(true);
+      }
+    });
+
+    socket.io.on("reconnect", () => {
+      loadOrderDetail(true);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [orderCode, order?.trackingTicket, order?.status, loadOrderDetail]);
+
   const handleCopyCode = () => {
     navigator.clipboard.writeText(orderCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success("Đã sao chép mã đơn hàng!");
   };
+
+  const activeStep = getDeliveryStep(order?.status);
+  const isCancelled = order?.status === "CANCELLED";
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-16 sm:py-16">
@@ -113,56 +201,169 @@ export function OrderSuccessView() {
             <ArrowRight className="size-4" />
           </Link>
 
-          {/* TIẾN TRÌNH 4 BƯỚC */}
-          <div className="space-y-2 pt-1">
-            <span className="text-[11px] sm:text-xs font-semibold text-foreground uppercase tracking-wide block">
-              Các bước chế biến &amp; giao hàng
-            </span>
-
-            <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center pt-1">
-              <div className="space-y-1">
-                <div className="size-8 sm:size-10 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-xs">
-                  <Check className="size-4 stroke-[2.5]" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-semibold text-foreground block">
-                  Đã nhận
-                </span>
-                <span className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block">
-                  Chờ xác nhận
-                </span>
-              </div>
-
-              <div className="space-y-1 opacity-60">
-                <div className="size-8 sm:size-10 rounded-full bg-muted border border-border text-muted-foreground flex items-center justify-center mx-auto">
-                  <ChefHat className="size-4" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-medium text-foreground block">
-                  Chế biến
-                </span>
-                <span className="text-[9px] sm:text-[10px] text-muted-foreground block">Tươi ngon</span>
-              </div>
-
-              <div className="space-y-1 opacity-60">
-                <div className="size-8 sm:size-10 rounded-full bg-muted border border-border text-muted-foreground flex items-center justify-center mx-auto">
-                  <Package className="size-4" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-medium text-foreground block">
-                  Đóng gói
-                </span>
-                <span className="text-[9px] sm:text-[10px] text-muted-foreground block">Kèm đá gel</span>
-              </div>
-
-              <div className="space-y-1 opacity-60">
-                <div className="size-8 sm:size-10 rounded-full bg-muted border border-border text-muted-foreground flex items-center justify-center mx-auto">
-                  <Store className="size-4" />
-                </div>
-                <span className="text-[11px] sm:text-xs font-medium text-foreground block">
-                  Giao hàng
-                </span>
-                <span className="text-[9px] sm:text-[10px] text-muted-foreground block">Đến tận nơi</span>
+          {/* TIẾN TRÌNH 4 BƯỚC (CẬP NHẬT REALTIME THEO BẾP & SHIPPERS) */}
+          {isCancelled ? (
+            <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-2.5 text-destructive text-xs">
+              <XCircle className="size-5 shrink-0" />
+              <div>
+                <span className="font-bold block">Đơn hàng này đã bị hủy</span>
+                <span className="text-2xs text-muted-foreground">Nếu có thắc mắc, quý khách vui lòng liên hệ hotline 1900 6868.</span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] sm:text-xs font-semibold text-foreground uppercase tracking-wide block">
+                  Các bước chế biến &amp; giao hàng
+                </span>
+                {order?.status && (
+                  <span className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Trực tiếp từ quán</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center pt-1">
+                {/* Bước 1: Tiếp nhận */}
+                <div className="space-y-1">
+                  <div
+                    className={cn(
+                      "size-8 sm:size-10 rounded-full flex items-center justify-center mx-auto shadow-xs transition-colors",
+                      activeStep >= 0
+                        ? "bg-emerald-500 text-white"
+                        : "bg-muted border border-border text-muted-foreground"
+                    )}
+                  >
+                    <Check className="size-4 stroke-[2.5]" />
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[11px] sm:text-xs block",
+                      activeStep === 0 ? "font-bold text-primary" : "font-semibold text-foreground"
+                    )}
+                  >
+                    Đã nhận
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium block">
+                    {activeStep === 0 ? "Chờ xác nhận" : "Hoàn thành"}
+                  </span>
+                </div>
+
+                {/* Bước 2: Chế biến */}
+                <div
+                  className={cn(
+                    "space-y-1 transition-opacity",
+                    activeStep < 1 && "opacity-60"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "size-8 sm:size-10 rounded-full flex items-center justify-center mx-auto shadow-xs transition-colors",
+                      activeStep > 1
+                        ? "bg-emerald-500 text-white"
+                        : activeStep === 1
+                        ? "bg-primary text-primary-foreground animate-pulse"
+                        : "bg-muted border border-border text-muted-foreground"
+                    )}
+                  >
+                    {activeStep > 1 ? (
+                      <Check className="size-4 stroke-[2.5]" />
+                    ) : (
+                      <ChefHat className="size-4" />
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[11px] sm:text-xs block",
+                      activeStep === 1 ? "font-bold text-primary" : "font-medium text-foreground"
+                    )}
+                  >
+                    Chế biến
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground block">
+                    {activeStep === 1 ? "Đang làm món" : "Tươi ngon"}
+                  </span>
+                </div>
+
+                {/* Bước 3: Đóng gói */}
+                <div
+                  className={cn(
+                    "space-y-1 transition-opacity",
+                    activeStep < 2 && "opacity-60"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "size-8 sm:size-10 rounded-full flex items-center justify-center mx-auto shadow-xs transition-colors",
+                      activeStep > 2
+                        ? "bg-emerald-500 text-white"
+                        : activeStep === 2
+                        ? "bg-primary text-primary-foreground animate-pulse"
+                        : "bg-muted border border-border text-muted-foreground"
+                    )}
+                  >
+                    {activeStep > 2 ? (
+                      <Check className="size-4 stroke-[2.5]" />
+                    ) : (
+                      <Package className="size-4" />
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[11px] sm:text-xs block",
+                      activeStep === 2 ? "font-bold text-primary" : "font-medium text-foreground"
+                    )}
+                  >
+                    Đóng gói
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground block">
+                    {activeStep === 2 ? "Chờ shipper" : "Kèm đá gel"}
+                  </span>
+                </div>
+
+                {/* Bước 4: Giao hàng */}
+                <div
+                  className={cn(
+                    "space-y-1 transition-opacity",
+                    activeStep < 3 && "opacity-60"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "size-8 sm:size-10 rounded-full flex items-center justify-center mx-auto shadow-xs transition-colors",
+                      order?.status === "COMPLETED"
+                        ? "bg-emerald-500 text-white"
+                        : activeStep === 3
+                        ? "bg-primary text-primary-foreground animate-bounce"
+                        : "bg-muted border border-border text-muted-foreground"
+                    )}
+                  >
+                    {order?.status === "COMPLETED" ? (
+                      <Check className="size-4 stroke-[2.5]" />
+                    ) : (
+                      <Truck className="size-4" />
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[11px] sm:text-xs block",
+                      activeStep === 3 ? "font-bold text-primary" : "font-medium text-foreground"
+                    )}
+                  >
+                    Giao hàng
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground block">
+                    {order?.status === "COMPLETED"
+                      ? "Đã nhận món"
+                      : activeStep === 3
+                      ? "Đang giao"
+                      : "Đến tận nơi"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* HƯỚNG DẪN NHẬN MÓN */}
           <div className="p-3.5 sm:p-4 rounded-xl bg-muted/30 border border-border/60 text-xs text-muted-foreground space-y-1">
