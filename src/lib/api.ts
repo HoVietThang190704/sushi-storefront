@@ -118,10 +118,79 @@ export interface CreateOrderPayload {
   ward?: string;
   note?: string;
   branchId?: string;
+  paymentMethod?: string;
   items: Array<{
     productId: string;
     quantity: number;
   }>;
+}
+
+export interface WardLocationItem {
+  district: string;
+  ward: string;
+  isSupported: boolean;
+  defaultBranch?: {
+    id: string;
+    code: string;
+    name: string;
+    address: string;
+  };
+  supportedBranches: Array<{
+    id: string;
+    code: string;
+    name: string;
+    fee: number;
+    isDefault: boolean;
+  }>;
+}
+
+export interface ShippingCalculationResult {
+  district: string;
+  ward: string;
+  fee: number;
+  branch: {
+    id: string;
+    code: string;
+    name: string;
+    address: string;
+  };
+}
+
+export async function fetchShippingLocations(): Promise<WardLocationItem[]> {
+  try {
+    const baseUrl = getBaseUrl();
+    const res = await fetch(`${baseUrl}/api/shipping/locations`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch shipping locations: ${res.statusText}`);
+    }
+    const json: ApiResponse<WardLocationItem[]> = await res.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("fetchShippingLocations error:", error);
+    return [];
+  }
+}
+
+export async function calculateShippingFee(params: {
+  district: string;
+  ward: string;
+  branchId?: string;
+}): Promise<ShippingCalculationResult> {
+  const baseUrl = getBaseUrl();
+  const search = new URLSearchParams({
+    district: params.district,
+    ward: params.ward,
+  });
+  if (params.branchId) search.set("branchId", params.branchId);
+
+  const res = await fetch(`${baseUrl}/api/shipping/calculate?${search.toString()}`);
+  const json: ApiResponse<ShippingCalculationResult> = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message || "Không thể tính phí vận chuyển cho khu vực này");
+  }
+  return json.data;
 }
 
 export interface CreatedOrderResponse {
@@ -131,6 +200,10 @@ export interface CreatedOrderResponse {
     orderCode?: string;
     customerName: string;
     customerPhone: string;
+    address?: string;
+    district?: string;
+    ward?: string;
+    shippingFee?: string | number;
     totalAmount: string | number;
     status: string;
     paymentStatus: string;
@@ -173,12 +246,18 @@ export interface TrackOrderResponse {
   customerName: string;
   customerPhone: string;
   customerEmail?: string | null;
+  address?: string | null;
+  district?: string | null;
+  ward?: string | null;
   note?: string | null;
   status: string;
   paymentStatus: string;
   paymentMethod: string;
+  shippingFee?: string | number;
   totalAmount: string | number;
   createdAt: string;
+  canCancel?: boolean;
+  trackingTicket?: string;
   items?: Array<{
     id: string;
     productName: string;
@@ -197,11 +276,16 @@ export interface TrackOrderResponse {
 
 export async function trackOrder(
   code: string,
-  token: string
+  token?: string,
+  phone?: string
 ): Promise<TrackOrderResponse> {
   const baseUrl = getBaseUrl();
+  const searchParams = new URLSearchParams({ code });
+  if (token) searchParams.set("token", token);
+  if (phone) searchParams.set("phone", phone);
+
   const res = await fetch(
-    `${baseUrl}/api/orders/track?code=${encodeURIComponent(code)}&token=${encodeURIComponent(token)}`,
+    `${baseUrl}/api/orders/track?${searchParams.toString()}`,
     {
       cache: "no-store",
     }
@@ -211,4 +295,25 @@ export async function trackOrder(
     throw new Error(json.message || "Không tìm thấy thông tin đơn hàng.");
   }
   return json.data;
+}
+
+export async function cancelGuestOrder(
+  code: string,
+  token: string,
+  reason?: string
+): Promise<{ success: boolean; message?: string }> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/orders/${encodeURIComponent(code)}/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token, reason }),
+  });
+
+  const json: ApiResponse<unknown> = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message || "Không thể hủy đơn hàng.");
+  }
+  return { success: true };
 }
