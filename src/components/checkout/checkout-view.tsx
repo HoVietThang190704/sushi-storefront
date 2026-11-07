@@ -32,11 +32,11 @@ import { useCartStore } from "@/lib/cart-store";
 import {
   formatPrice,
   createOrder,
-  fetchShippingLocations,
   calculateShippingFee,
   type WardLocationItem,
   type ShippingCalculationResult,
 } from "@/lib/api";
+import { useShippingLocations } from "@/hooks/use-queries";
 import { PAYMENT_CONFIG, VIETNAM_PHONE_REGEX } from "@/config/site.config";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Button } from "@/components/ui/button";
@@ -78,32 +78,10 @@ export function CheckoutView() {
   // Modal / Sheet đổi chi nhánh phục vụ
   const [isBranchModalOpen, setIsBranchModalOpen] = React.useState(false);
 
-  // Dữ liệu vị trí & phí ship
-  const [locations, setLocations] = React.useState<WardLocationItem[]>([]);
-  const [loadingLocations, setLoadingLocations] = React.useState(true);
+  // Dữ liệu vị trí & phí ship quản lý bằng TanStack Query (tự động cache và lấy lại khi cần)
+  const { data: locations = [], isLoading: loadingLocations } = useShippingLocations();
   const [shippingCalc, setShippingCalc] = React.useState<ShippingCalculationResult | null>(null);
   const [calculatingFee, setCalculatingFee] = React.useState(false);
-
-  // 1. Tải danh sách Phường/Xã TP.HCM khi mount
-  React.useEffect(() => {
-    let mounted = true;
-    async function loadLocations() {
-      try {
-        const data = await fetchShippingLocations();
-        if (mounted) {
-          setLocations(data);
-          setLoadingLocations(false);
-        }
-      } catch (err) {
-        console.error("Failed to load locations:", err);
-        if (mounted) setLoadingLocations(false);
-      }
-    }
-    loadLocations();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   // Danh sách các Phường/Xã lọc theo ô tìm kiếm (tìm theo tên mới hoặc tên cũ) và tab lọc
   const filteredWards = React.useMemo(() => {

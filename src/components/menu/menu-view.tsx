@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Category, Product, formatPrice } from "@/lib/api";
+import { useCategories, useProducts } from "@/hooks/use-queries";
 import { useCartStore } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,84 +35,56 @@ export function MenuView() {
   const urlCategoryParam = searchParams.get("category");
   const urlSearchParam = searchParams.get("q");
 
-  const [categories, setCategories] = React.useState<Category[]>([]);
-  const [products, setProducts] = React.useState<Product[]>([]);
+  // Dùng TanStack Query cho Catalog categories & products: tự động cache, tái sử dụng tức thì khi đổi trang
+  const {
+    data: categories = [],
+    isLoading: loadingCategories,
+    error: catError,
+    refetch: refetchCategories,
+  } = useCategories();
+
+  const {
+    data: products = [],
+    isLoading: loadingProducts,
+    error: prodError,
+    refetch: refetchProducts,
+  } = useProducts();
+
+  const isLoading = loadingCategories || loadingProducts;
+  const error = catError || prodError ? "Không thể kết nối đến máy chủ" : null;
+
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [internalSearchQuery, setInternalSearchQuery] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const [addedProductId, setAddedProductId] = React.useState<string | null>(null);
-  const [reloadKey, setReloadKey] = React.useState(0);
 
   const searchQuery =
     internalSearchQuery !== null ? internalSearchQuery : urlSearchParam || "";
 
   const addItem = useCartStore((state) => state.addItem);
 
-  // Tải dữ liệu từ API Catalog
+  // Nếu có query param category từ URL, chọn danh mục tương ứng
   React.useEffect(() => {
-    let ignore = false;
-
-    async function fetchData() {
-      try {
-        const [catRes, prodRes] = await Promise.all([
-          fetch("/api/catalog/categories").then((r) => {
-            if (!r.ok) throw new Error("Lỗi tải danh mục thực đơn");
-            return r.json();
-          }),
-          fetch("/api/catalog/products").then((r) => {
-            if (!r.ok) throw new Error("Lỗi tải danh sách món ăn");
-            return r.json();
-          }),
-        ]);
-
-        if (!ignore) {
-          const loadedCategories: Category[] = catRes.data || [];
-          const loadedProducts: Product[] = prodRes.data || [];
-
-          setCategories(loadedCategories);
-          setProducts(loadedProducts);
-
-          // Nếu có query param category từ URL, chọn danh mục tương ứng
-          if (urlCategoryParam) {
-            const target = urlCategoryParam.toLowerCase();
-            const matched = loadedCategories.find((c) => {
-              const cname = c.name.toLowerCase();
-              return (
-                cname === target ||
-                cname.includes(target) ||
-                target.includes(cname) ||
-                c.id === urlCategoryParam
-              );
-            });
-            if (matched) {
-              setSelectedCategoryId(matched.id);
-            }
-          }
-          setError(null);
-          setIsLoading(false);
-        }
-      } catch (err: unknown) {
-        if (!ignore) {
-          const msg =
-            err instanceof Error ? err.message : "Không thể kết nối đến máy chủ";
-          setError(msg);
-          setIsLoading(false);
-        }
+    if (urlCategoryParam && categories.length > 0) {
+      const target = urlCategoryParam.toLowerCase();
+      const matched = categories.find((c) => {
+        const cname = c.name.toLowerCase();
+        return (
+          cname === target ||
+          cname.includes(target) ||
+          target.includes(cname) ||
+          c.id === urlCategoryParam
+        );
+      });
+      if (matched) {
+        setSelectedCategoryId(matched.id);
       }
     }
-
-    fetchData();
-
-    return () => {
-      ignore = true;
-    };
-  }, [urlCategoryParam, reloadKey]);
+  }, [urlCategoryParam, categories]);
 
   const handleRetry = () => {
-    setIsLoading(true);
-    setReloadKey((k) => k + 1);
+    refetchCategories();
+    refetchProducts();
   };
 
   // Lọc sản phẩm theo danh mục và từ khóa tìm kiếm
