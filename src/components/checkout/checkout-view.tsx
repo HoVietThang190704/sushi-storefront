@@ -25,6 +25,8 @@ import {
   Store,
   Truck,
   AlertCircle,
+  Search,
+  X,
 } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import {
@@ -68,6 +70,10 @@ export function CheckoutView() {
   const [paymentMethod, setPaymentMethod] = React.useState<"CASH" | "VIETQR">("CASH");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  // Modal / Sheet tìm kiếm Phường/Xã (Tên mới & Tên cũ)
+  const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
+  const [searchWardQuery, setSearchWardQuery] = React.useState("");
+
   // Dữ liệu vị trí & phí ship
   const [locations, setLocations] = React.useState<WardLocationItem[]>([]);
   const [loadingLocations, setLoadingLocations] = React.useState(true);
@@ -95,29 +101,37 @@ export function CheckoutView() {
     };
   }, []);
 
-  // Danh sách các Khu vực / Quận tham chiếu
-  const availableDistricts = React.useMemo(() => {
-    const set = new Set<string>();
-    locations.forEach((loc) => {
-      if (loc.district) set.add(loc.district);
-    });
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "vi"));
-  }, [locations]);
-
-  // Danh sách các Phường/Xã thuộc Khu vực đang chọn (hoặc tất cả 168 phường/xã nếu chưa chọn khu vực)
-  const availableWards = React.useMemo(() => {
-    let filtered = locations;
-    if (selectedDistrict) {
-      filtered = locations.filter((loc) => loc.district === selectedDistrict);
+  // Danh sách các Phường/Xã lọc theo ô tìm kiếm (tìm theo tên mới hoặc tên cũ)
+  const filteredWards = React.useMemo(() => {
+    const q = searchWardQuery.trim().toLowerCase();
+    if (!q) {
+      return locations.slice().sort((a, b) => {
+        // Đưa các phường có giao hàng lên trước
+        if (a.isSupported !== b.isSupported) {
+          return a.isSupported ? -1 : 1;
+        }
+        return a.ward.localeCompare(b.ward, "vi");
+      });
     }
-    return filtered.slice().sort((a, b) => {
-      // Đưa các phường có hỗ trợ ship lên đầu để khách dễ chọn
-      if (a.isSupported !== b.isSupported) {
-        return a.isSupported ? -1 : 1;
-      }
-      return a.ward.localeCompare(b.ward, "vi");
-    });
-  }, [locations, selectedDistrict]);
+
+    return locations
+      .filter((loc) => {
+        const matchName = loc.ward.toLowerCase().includes(q);
+        const matchFormer = loc.formerWards
+          ? loc.formerWards.toLowerCase().includes(q)
+          : false;
+        const matchDistrict = loc.district
+          ? loc.district.toLowerCase().includes(q)
+          : false;
+        return matchName || matchFormer || matchDistrict;
+      })
+      .sort((a, b) => {
+        if (a.isSupported !== b.isSupported) {
+          return a.isSupported ? -1 : 1;
+        }
+        return a.ward.localeCompare(b.ward, "vi");
+      });
+  }, [locations, searchWardQuery]);
 
   // Thông tin Phường/Xã hiện tại được chọn
   const currentWardInfo = React.useMemo(() => {
@@ -554,82 +568,93 @@ export function CheckoutView() {
                     </div>
                   </div>
 
-                  {/* Dropdown Khu vực & Phường/Xã TP.HCM mới (Nghị quyết 1685) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 pt-1">
-                    {/* Chọn Khu vực / Quận tham chiếu */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-foreground flex items-center gap-1">
-                          <MapPin className="size-3.5 text-muted-foreground" />
-                          <span>Khu vực / Quận (tham chiếu)</span>
-                        </label>
-                        {selectedDistrict && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedDistrict("")}
-                            className="text-[11px] text-primary hover:underline"
-                          >
-                            Tất cả khu vực
-                          </button>
-                        )}
-                      </div>
-                      <select
-                        value={selectedDistrict}
-                        onChange={(e) => {
-                          const newDistrict = e.target.value;
-                          setSelectedDistrict(newDistrict);
-                          if (newDistrict && currentWardInfo && currentWardInfo.district !== newDistrict) {
-                            setSelectedWard("");
-                            setSelectedBranchId("");
-                          }
-                        }}
-                        className="w-full rounded-xl h-11 px-3 text-base sm:text-sm bg-background border border-input shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                      >
-                        <option value="">-- Tất cả khu vực TP.HCM ({availableDistricts.length} khu vực) --</option>
-                        {availableDistricts.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Chọn Phường / Xã mới */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  {/* Khối chọn địa chỉ Phường/Xã (Đúng chuẩn UX hiện đại) */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                      <span className="flex items-center gap-1">
                         <MapPin className="size-3.5 text-primary" />
-                        <span>Phường / Xã / Đặc khu TP.HCM</span>
+                        <span>Khu vực giao hàng (Phường / Xã TP.HCM)</span>
                         <span className="text-destructive">*</span>
-                      </label>
-                      <select
-                        required
-                        disabled={loadingLocations}
-                        value={selectedWard}
-                        onChange={(e) => {
-                          const wardName = e.target.value;
-                          setSelectedWard(wardName);
-                          setSelectedBranchId("");
-                          if (wardName) {
-                            const found = locations.find((l) => l.ward === wardName);
-                            if (found && !selectedDistrict) {
-                              setSelectedDistrict(found.district);
-                            }
-                          }
+                      </span>
+                      {selectedWard && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchWardQuery("");
+                            setIsAddressModalOpen(true);
+                          }}
+                          className="text-2xs text-primary font-medium hover:underline flex items-center gap-0.5"
+                        >
+                          <Edit3 className="size-3" />
+                          <span>Đổi phường/xã</span>
+                        </button>
+                      )}
+                    </label>
+
+                    {!selectedWard ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchWardQuery("");
+                          setIsAddressModalOpen(true);
                         }}
-                        className="w-full rounded-xl h-11 px-3 text-base sm:text-sm bg-background border border-input shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                        className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 active:scale-[0.99] transition-all flex items-center justify-between group"
                       >
-                        <option value="">
-                          {loadingLocations
-                            ? "Đang tải danh sách 168 phường/xã..."
-                            : `-- Chọn Phường / Xã (${availableWards.length} đơn vị) --`}
-                        </option>
-                        {availableWards.map((w) => (
-                          <option key={w.ward} value={w.ward}>
-                            {w.ward} {w.isSupported ? "✓ (Có giao hàng)" : "(Chưa hỗ trợ)"}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        <div className="flex items-center gap-3">
+                          <div className="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <MapPin className="size-4" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                              Chọn Phường / Xã nhận hàng
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Tìm theo tên mới hoặc tên phường/quận cũ
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </button>
+                    ) : (
+                      <div className="p-3.5 rounded-xl border border-border/80 bg-muted/20 flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2.5">
+                          <MapPin className="size-4 text-primary shrink-0 mt-0.5" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-foreground">
+                                {selectedWard}
+                              </span>
+                              {currentWardInfo?.isSupported ? (
+                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-3xs font-semibold border-emerald-500/20">
+                                  Có giao hàng
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive" className="text-3xs font-semibold">
+                                  Chưa hỗ trợ
+                                </Badge>
+                              )}
+                            </div>
+                            {currentWardInfo?.formerWards && (
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Trước đây: {currentWardInfo.formerWards}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSearchWardQuery("");
+                            setIsAddressModalOpen(true);
+                          }}
+                          className="h-8 text-xs text-primary hover:text-primary px-2"
+                        >
+                          Đổi
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Địa chỉ chi tiết */}
@@ -1069,6 +1094,134 @@ export function CheckoutView() {
           </div>
         </div>
       </div>
+
+      {/* ==================== MODAL / SHEET TÌM KIẾM PHƯỜNG / XÃ (TÊN MỚI & CŨ) ==================== */}
+      {isAddressModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-lg bg-card border border-border/80 shadow-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[88vh] sm:max-h-[80vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Header Modal */}
+            <div className="px-4 py-3.5 border-b border-border/60 flex items-center justify-between shrink-0 bg-muted/20">
+              <div className="flex items-center gap-2">
+                <MapPin className="size-4 text-primary" />
+                <h3 className="font-bold text-sm sm:text-base text-foreground">
+                  Chọn Phường / Xã TP.HCM
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddressModalOpen(false)}
+                className="size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                aria-label="Đóng"
+              >
+                <X className="size-4.5" />
+              </button>
+            </div>
+
+            {/* Ô tìm kiếm thông minh */}
+            <div className="p-3.5 border-b border-border/60 shrink-0 bg-card space-y-2">
+              <div className="relative">
+                <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Input
+                  type="text"
+                  autoFocus
+                  placeholder="Tìm theo tên phường mới hoặc tên cũ (VD: Bến Nghé, Đa Kao, Sài Gòn...)"
+                  value={searchWardQuery}
+                  onChange={(e) => setSearchWardQuery(e.target.value)}
+                  className="pl-9.5 pr-8 h-10.5 rounded-xl text-sm bg-muted/30 focus-visible:bg-background"
+                />
+                {searchWardQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchWardQuery("")}
+                    className="size-6 absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-2xs text-muted-foreground px-1">
+                <span>TP. Hồ Chí Minh ({filteredWards.length} đơn vị)</span>
+                <span>Hỗ trợ tra cứu theo tên cũ</span>
+              </div>
+            </div>
+
+            {/* Danh sách Phường / Xã */}
+            <div className="flex-1 overflow-y-auto divide-y divide-border/40 p-1">
+              {filteredWards.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground space-y-2">
+                  <MapPin className="size-8 mx-auto text-muted-foreground/40" />
+                  <p className="text-sm font-medium">Không tìm thấy phường/xã nào phù hợp</p>
+                  <p className="text-xs">Hãy thử tìm theo tên phường mới hoặc tên phường cũ trước đây</p>
+                </div>
+              ) : (
+                filteredWards.map((w) => {
+                  const isSelected = selectedWard === w.ward;
+                  return (
+                    <button
+                      key={w.wardCode || w.ward}
+                      type="button"
+                      onClick={() => {
+                        setSelectedWard(w.ward);
+                        setSelectedDistrict(w.district);
+                        setSelectedBranchId("");
+                        setIsAddressModalOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-3.5 py-3 rounded-lg flex items-start justify-between gap-3 transition-colors",
+                        isSelected
+                          ? "bg-primary/10 border-l-3 border-primary"
+                          : "hover:bg-muted/40 active:bg-muted/60"
+                      )}
+                    >
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={cn(
+                              "text-sm font-semibold truncate",
+                              isSelected ? "text-primary font-bold" : "text-foreground"
+                            )}
+                          >
+                            {w.ward}
+                          </span>
+                          {w.isSupported ? (
+                            <span className="text-3xs px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                              Có giao hàng
+                            </span>
+                          ) : (
+                            <span className="text-3xs px-1.5 py-0.5 rounded font-medium bg-muted text-muted-foreground shrink-0">
+                              Chưa hỗ trợ
+                            </span>
+                          )}
+                        </div>
+
+                        {w.formerWards && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            Trước đây: <span className="text-foreground/80">{w.formerWards}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      {isSelected && (
+                        <Check className="size-4 text-primary shrink-0 mt-1" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer Modal */}
+            <div className="p-3 border-t border-border/60 shrink-0 bg-muted/20 text-center text-2xs text-muted-foreground">
+              Nhấp vào phường/xã để chọn và tự động tính phí vận chuyển
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

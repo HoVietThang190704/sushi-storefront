@@ -129,6 +129,7 @@ export interface WardLocationItem {
   district: string;
   ward: string;
   wardCode?: string;
+  formerWards?: string;
   isSupported: boolean;
   defaultBranch?: {
     id: string;
