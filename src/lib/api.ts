@@ -128,6 +128,7 @@ export interface CreateOrderPayload {
 export interface WardLocationItem {
   district: string;
   ward: string;
+  wardCode?: string;
   isSupported: boolean;
   defaultBranch?: {
     id: string;
@@ -145,7 +146,7 @@ export interface WardLocationItem {
 }
 
 export interface ShippingCalculationResult {
-  district: string;
+  district?: string;
   ward: string;
   fee: number;
   branch: {
@@ -174,15 +175,15 @@ export async function fetchShippingLocations(): Promise<WardLocationItem[]> {
 }
 
 export async function calculateShippingFee(params: {
-  district: string;
+  district?: string;
   ward: string;
   branchId?: string;
 }): Promise<ShippingCalculationResult> {
   const baseUrl = getBaseUrl();
   const search = new URLSearchParams({
-    district: params.district,
     ward: params.ward,
   });
+  if (params.district) search.set("district", params.district);
   if (params.branchId) search.set("branchId", params.branchId);
 
   const res = await fetch(`${baseUrl}/api/shipping/calculate?${search.toString()}`);

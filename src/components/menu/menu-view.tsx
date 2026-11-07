@@ -225,10 +225,10 @@ export function MenuView() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* ==================== BREADCRUMB & BANNER TIÊU ĐỀ ==================== */}
-      <div className="relative border-b border-border/70 bg-gradient-to-b from-muted/40 via-muted/20 to-transparent py-8 sm:py-12">
+      <div className="relative border-b border-border/70 bg-gradient-to-b from-muted/40 via-muted/20 to-transparent py-4 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+          <nav className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
             <Link
               href="/"
               className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
@@ -240,16 +240,17 @@ export function MenuView() {
             <span className="font-medium text-foreground">Thực đơn</span>
           </nav>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary dark:text-red-400">
+              <div className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary dark:text-red-400">
                 <span className="h-0.5 w-6 bg-primary dark:bg-red-500" />
                 <span>CHỌN MÓN ONLINE • お持ち帰り注文</span>
               </div>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl font-serif">
-                Thực Đơn Trực Tuyến & Đặt Mang Đi
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground font-serif">
+                <span className="sm:hidden">Thực đơn</span>
+                <span className="hidden sm:inline">Thực Đơn Trực Tuyến &amp; Đặt Mang Đi</span>
               </h1>
-              <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
+              <p className="hidden sm:block mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
                 Thưởng thức các lát Sashimi tươi rói, sushi Nigiri tinh tế, cơm cuộn thơm lừng
                 cùng những món ăn nóng hổi chuẩn vị Nhật Bản. Thêm nhanh vào giỏ và nhận tại quầy.
               </p>

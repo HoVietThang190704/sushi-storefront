@@ -14,8 +14,11 @@ import {
   MapPin,
   UtensilsCrossed,
   Home as HomeIcon,
+  Package,
+  ChevronRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { AccountDropdown } from "@/components/layout/account-dropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -59,8 +62,18 @@ export function Header() {
     setIsSearchOpen(false);
   };
 
+  const isMinimalMobile =
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname === "/order-success";
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
+    <header
+      className={cn(
+        "sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
+        isMinimalMobile && "hidden sm:block"
+      )}
+    >
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* ===================== KHỐI TRÁI: LOGO ===================== */}
         <div className="flex items-center">
@@ -188,18 +201,10 @@ export function Header() {
             </Link>
           </Button>
 
-          {/* Biểu tượng User (ẩn trên mobile nhỏ vì đã có trong drawer menu) */}
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            title="Tài khoản / Đăng nhập"
-            className="hidden sm:inline-flex size-9"
-          >
-            <Link href="/account" aria-label="Tài khoản cá nhân">
-              <User className="size-5" />
-            </Link>
-          </Button>
+          {/* Menu Dropdown Tài khoản & Đơn mua kiểu Shopee (Desktop) */}
+          <div className="hidden sm:inline-flex">
+            <AccountDropdown />
+          </div>
 
           {/* Hamburger menu (Mobile) */}
           <div className="md:hidden">
@@ -264,6 +269,26 @@ export function Header() {
                 </div>
 
                 <div className="mt-8 border-t border-border pt-6 flex flex-col gap-3">
+                  {/* Card Đơn mua của tôi kiểu Shopee trên Mobile */}
+                  <Link
+                    href="/track-order"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between rounded-xl border border-border/80 bg-muted/40 p-3 hover:bg-muted text-foreground transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <Package className="size-4" />
+                      </div>
+                      <div className="text-left">
+                        <span className="text-xs font-semibold block">Đơn mua của tôi</span>
+                        <span className="text-[10px] text-muted-foreground block">
+                          Kiểm tra tiến độ đơn Take Away
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+
                   <div className="flex items-center justify-between rounded-lg bg-muted/60 p-3">
                     <span className="text-sm font-medium">Giao diện</span>
                     <ThemeToggle />

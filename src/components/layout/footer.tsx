@@ -1,10 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Phone, MapPin, Clock } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function Footer() {
+  const pathname = usePathname();
+  const isMinimalMobile =
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname === "/order-success" ||
+    pathname === "/menu" ||
+    pathname?.startsWith("/menu/");
+
   return (
-    <footer className="border-t border-border/60 bg-card text-foreground">
+    <footer
+      className={cn(
+        "border-t border-border/60 bg-card text-foreground",
+        isMinimalMobile && "hidden sm:block"
+      )}
+    >
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Cột 1: Thông tin thương hiệu */}
@@ -57,7 +74,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/track"
+                  href="/track-order"
                   className="hover:text-primary transition-colors"
                 >
                   Tra cứu đơn hàng

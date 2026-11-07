@@ -51,8 +51,12 @@ export default function RootLayout({
             <Header />
           </Suspense>
           <main className="flex-1 flex flex-col">{children}</main>
-          <Footer />
-          <ScrollToTopButton />
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+          <Suspense fallback={null}>
+            <ScrollToTopButton />
+          </Suspense>
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ArrowUp } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 function subscribeReducedMotion(callback: () => void) {
@@ -25,6 +26,11 @@ function getServerSnapshot() {
 }
 
 export function ScrollToTopButton() {
+  const pathname = usePathname();
+  const isMinimalMobile =
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname === "/order-success";
   const [isVisible, setIsVisible] = React.useState(false);
 
   const prefersReducedMotion = React.useSyncExternalStore(
@@ -72,6 +78,7 @@ export function ScrollToTopButton() {
         "fixed z-40 flex items-center justify-center rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95",
         "bottom-6 right-6 sm:bottom-8 sm:right-8 size-11 sm:size-12",
         "bg-card/90 text-foreground backdrop-blur-md border border-border/80 shadow-lg shadow-black/10 dark:shadow-black/40 hover:bg-primary hover:text-primary-foreground hover:border-primary/50 dark:hover:bg-primary dark:hover:text-primary-foreground",
+        isMinimalMobile && "hidden sm:flex",
         isVisible
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 translate-y-4 pointer-events-none"

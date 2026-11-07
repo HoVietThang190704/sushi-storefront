@@ -95,33 +95,45 @@ export function CheckoutView() {
     };
   }, []);
 
-  // Danh sách các Quận/Huyện duy nhất từ dữ liệu locations
+  // Danh sách các Khu vực / Quận tham chiếu
   const availableDistricts = React.useMemo(() => {
     const set = new Set<string>();
-    locations.forEach((loc) => set.add(loc.district));
+    locations.forEach((loc) => {
+      if (loc.district) set.add(loc.district);
+    });
     return Array.from(set).sort((a, b) => a.localeCompare(b, "vi"));
   }, [locations]);
 
-  // Danh sách các Phường/Xã thuộc Quận/Huyện đang chọn
+  // Danh sách các Phường/Xã thuộc Khu vực đang chọn (hoặc tất cả 168 phường/xã nếu chưa chọn khu vực)
   const availableWards = React.useMemo(() => {
-    if (!selectedDistrict) return [];
-    return locations
-      .filter((loc) => loc.district === selectedDistrict)
-      .map((loc) => loc.ward)
-      .sort((a, b) => a.localeCompare(b, "vi"));
+    let filtered = locations;
+    if (selectedDistrict) {
+      filtered = locations.filter((loc) => loc.district === selectedDistrict);
+    }
+    return filtered.slice().sort((a, b) => {
+      // Đưa các phường có hỗ trợ ship lên đầu để khách dễ chọn
+      if (a.isSupported !== b.isSupported) {
+        return a.isSupported ? -1 : 1;
+      }
+      return a.ward.localeCompare(b.ward, "vi");
+    });
   }, [locations, selectedDistrict]);
 
   // Thông tin Phường/Xã hiện tại được chọn
   const currentWardInfo = React.useMemo(() => {
-    if (!selectedDistrict || !selectedWard) return null;
-    return locations.find(
-      (loc) => loc.district === selectedDistrict && loc.ward === selectedWard
-    );
-  }, [locations, selectedDistrict, selectedWard]);
+    if (!selectedWard) return null;
+    return locations.find((loc) => loc.ward === selectedWard);
+  }, [locations, selectedWard]);
 
   // 2. Tính lại phí ship khi đổi Ward hoặc BranchId
   React.useEffect(() => {
-    if (!selectedDistrict || !selectedWard) {
+    if (!selectedWard) {
+      setShippingCalc(null);
+      return;
+    }
+
+    // Nếu ward này không được hỗ trợ giao hàng
+    if (currentWardInfo && !currentWardInfo.isSupported) {
       setShippingCalc(null);
       return;
     }
@@ -131,7 +143,7 @@ export function CheckoutView() {
       setCalculatingFee(true);
       try {
         const res = await calculateShippingFee({
-          district: selectedDistrict,
+          district: selectedDistrict || currentWardInfo?.district,
           ward: selectedWard,
           branchId: selectedBranchId || undefined,
         });
@@ -154,7 +166,7 @@ export function CheckoutView() {
     return () => {
       active = false;
     };
-  }, [selectedDistrict, selectedWard, selectedBranchId]);
+  }, [selectedDistrict, selectedWard, selectedBranchId, currentWardInfo]);
 
   if (!isMounted) {
     return (
@@ -185,7 +197,8 @@ export function CheckoutView() {
 
   const subtotalPrice = totalPrice();
   const currentShippingFee = shippingCalc?.fee || 0;
-  const calculatedTotal = subtotalPrice + currentShippingFee;
+  const isDeliverySupported = Boolean(currentWardInfo?.isSupported && shippingCalc);
+  const calculatedTotal = subtotalPrice + (shippingCalc ? currentShippingFee : 0);
 
   // Validate Bước 1 và chuyển sang Bước 2
   const handleProceedToPayment = (e: React.FormEvent) => {
@@ -205,8 +218,13 @@ export function CheckoutView() {
       return;
     }
 
-    if (!selectedDistrict || !selectedWard) {
-      toast.error("Vui lòng chọn Quận/Huyện và Phường/Xã tại TP.HCM");
+    if (!selectedWard) {
+      toast.error("Vui lòng chọn Phường / Xã nhận hàng tại TP.HCM");
+      return;
+    }
+
+    if (currentWardInfo && !currentWardInfo.isSupported) {
+      toast.error("Khu vực này hiện chưa được hỗ trợ giao hàng tận nơi. Vui lòng chọn địa chỉ khác.");
       return;
     }
 
@@ -216,12 +234,12 @@ export function CheckoutView() {
     }
 
     if (!shippingCalc) {
-      toast.error("Khu vực này hiện chưa được hỗ trợ giao hàng tận nơi");
+      toast.error("Chưa tính được phí giao hàng cho khu vực này");
       return;
     }
 
     setStep(2);
-    window.scrollTo({ top: 120, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Xác nhận đặt hàng ở Bước 2
@@ -236,7 +254,8 @@ export function CheckoutView() {
     setIsSubmitting(true);
 
     try {
-      const fullAddress = `${streetAddress.trim()}, ${selectedWard}, ${selectedDistrict}, TP. Hồ Chí Minh`;
+      const districtName = selectedDistrict || currentWardInfo?.district || "";
+      const fullAddress = `${streetAddress.trim()}, ${selectedWard}, ${districtName ? districtName + ", " : ""}TP. Hồ Chí Minh`;
 
       const res = await createOrder({
         customerName: customerName.trim(),
@@ -244,7 +263,7 @@ export function CheckoutView() {
         customerEmail: customerEmail.trim() || undefined,
         address: fullAddress,
         province: "TP. Hồ Chí Minh",
-        district: selectedDistrict,
+        district: districtName,
         ward: selectedWard,
         branchId: selectedBranchId || undefined,
         paymentMethod,
@@ -322,7 +341,7 @@ export function CheckoutView() {
       </div>
 
       {/* ==================== APP-LIKE TOP BAR (MOBILE) ==================== */}
-      <div className="sm:hidden border-b border-border/70 bg-card/95 backdrop-blur-md px-3 h-14 sticky top-0 z-40 flex items-center justify-between">
+      <div className="sm:hidden border-b border-border/70 bg-card/95 backdrop-blur-md px-3 h-14 sticky top-0 z-30 flex items-center justify-between">
         <button
           type="button"
           onClick={() => {
@@ -338,8 +357,8 @@ export function CheckoutView() {
         >
           <ChevronLeft className="size-6 stroke-[2]" />
         </button>
-        <h1 className="font-semibold text-base text-foreground tracking-tight select-none">
-          {step === 1 ? "Địa chỉ giao hàng" : "Xác nhận & Thanh toán"}
+        <h1 className="font-semibold text-sm sm:text-base text-foreground tracking-tight select-none truncate max-w-[200px]">
+          {step === 1 ? "Địa chỉ giao hàng (TP.HCM)" : "Xác nhận & Thanh toán"}
         </h1>
         <div className="size-10 flex items-center justify-center -mr-1">
           <span className="text-[11px] font-semibold text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-full font-mono">
@@ -348,7 +367,7 @@ export function CheckoutView() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-3 sm:pt-10">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 pt-3 sm:pt-10">
         {/* ==================== ACCORDION TÓM TẮT ĐƠN HÀNG (MOBILE) ==================== */}
         <div className="lg:hidden mb-4 rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs">
           <button
@@ -367,7 +386,9 @@ export function CheckoutView() {
               />
             </div>
             <span className="font-mono text-sm font-bold text-foreground">
-              {formatPrice(calculatedTotal)}
+              {shippingCalc
+                ? formatPrice(calculatedTotal)
+                : `${formatPrice(subtotalPrice)} + ship`}
             </span>
           </button>
 
@@ -415,6 +436,10 @@ export function CheckoutView() {
                   <span className="font-mono font-semibold text-primary">
                     {calculatingFee ? (
                       <Loader2 className="size-3 animate-spin inline" />
+                    ) : !selectedWard ? (
+                      <span className="text-muted-foreground font-sans text-2xs">Chọn phường/xã</span>
+                    ) : currentWardInfo && !currentWardInfo.isSupported ? (
+                      <span className="text-destructive font-sans text-2xs font-medium">Chưa hỗ trợ</span>
                     ) : (
                       formatPrice(currentShippingFee)
                     )}
@@ -508,7 +533,7 @@ export function CheckoutView() {
                         placeholder="Nguyễn Văn A"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        className="rounded-xl h-10 sm:h-11 text-sm"
+                        className="rounded-xl h-11 text-base sm:text-sm"
                       />
                     </div>
 
@@ -524,31 +549,43 @@ export function CheckoutView() {
                         placeholder="0912 345 678"
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
-                        className="rounded-xl h-10 sm:h-11 text-sm"
+                        className="rounded-xl h-11 text-base sm:text-sm"
                       />
                     </div>
                   </div>
 
-                  {/* Dropdown Quận/Huyện & Phường/Xã */}
+                  {/* Dropdown Khu vực & Phường/Xã TP.HCM mới (Nghị quyết 1685) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 pt-1">
-                    {/* Chọn Quận/Huyện */}
+                    {/* Chọn Khu vực / Quận tham chiếu */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-foreground flex items-center gap-1">
-                        <MapPin className="size-3.5 text-muted-foreground" />
-                        <span>Quận / Huyện (TP.HCM)</span>
-                        <span className="text-destructive">*</span>
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                          <MapPin className="size-3.5 text-muted-foreground" />
+                          <span>Khu vực / Quận (tham chiếu)</span>
+                        </label>
+                        {selectedDistrict && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDistrict("")}
+                            className="text-[11px] text-primary hover:underline"
+                          >
+                            Tất cả khu vực
+                          </button>
+                        )}
+                      </div>
                       <select
-                        required
                         value={selectedDistrict}
                         onChange={(e) => {
-                          setSelectedDistrict(e.target.value);
-                          setSelectedWard("");
-                          setSelectedBranchId("");
+                          const newDistrict = e.target.value;
+                          setSelectedDistrict(newDistrict);
+                          if (newDistrict && currentWardInfo && currentWardInfo.district !== newDistrict) {
+                            setSelectedWard("");
+                            setSelectedBranchId("");
+                          }
                         }}
-                        className="w-full rounded-xl h-10 sm:h-11 px-3 text-sm bg-background border border-input shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        className="w-full rounded-xl h-11 px-3 text-base sm:text-sm bg-background border border-input shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                       >
-                        <option value="">-- Chọn Quận / Huyện --</option>
+                        <option value="">-- Tất cả khu vực TP.HCM ({availableDistricts.length} khu vực) --</option>
                         {availableDistricts.map((d) => (
                           <option key={d} value={d}>
                             {d}
@@ -557,27 +594,38 @@ export function CheckoutView() {
                       </select>
                     </div>
 
-                    {/* Chọn Phường/Xã */}
+                    {/* Chọn Phường / Xã mới */}
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-foreground flex items-center gap-1">
-                        <MapPin className="size-3.5 text-muted-foreground" />
-                        <span>Phường / Xã</span>
+                        <MapPin className="size-3.5 text-primary" />
+                        <span>Phường / Xã / Đặc khu TP.HCM</span>
                         <span className="text-destructive">*</span>
                       </label>
                       <select
                         required
-                        disabled={!selectedDistrict || loadingLocations}
+                        disabled={loadingLocations}
                         value={selectedWard}
                         onChange={(e) => {
-                          setSelectedWard(e.target.value);
+                          const wardName = e.target.value;
+                          setSelectedWard(wardName);
                           setSelectedBranchId("");
+                          if (wardName) {
+                            const found = locations.find((l) => l.ward === wardName);
+                            if (found && !selectedDistrict) {
+                              setSelectedDistrict(found.district);
+                            }
+                          }
                         }}
-                        className="w-full rounded-xl h-10 sm:h-11 px-3 text-sm bg-background border border-input shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+                        className="w-full rounded-xl h-11 px-3 text-base sm:text-sm bg-background border border-input shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
                       >
-                        <option value="">-- Chọn Phường / Xã --</option>
+                        <option value="">
+                          {loadingLocations
+                            ? "Đang tải danh sách 168 phường/xã..."
+                            : `-- Chọn Phường / Xã (${availableWards.length} đơn vị) --`}
+                        </option>
                         {availableWards.map((w) => (
-                          <option key={w} value={w}>
-                            {w}
+                          <option key={w.ward} value={w.ward}>
+                            {w.ward} {w.isSupported ? "✓ (Có giao hàng)" : "(Chưa hỗ trợ)"}
                           </option>
                         ))}
                       </select>
@@ -597,20 +645,30 @@ export function CheckoutView() {
                       placeholder="Ví dụ: 123/4 Nguyễn Trãi, Chung cư Flora, Tầng 5"
                       value={streetAddress}
                       onChange={(e) => setStreetAddress(e.target.value)}
-                      className="rounded-xl h-10 sm:h-11 text-sm"
+                      className="rounded-xl h-11 text-base sm:text-sm"
                     />
                   </div>
 
                   {/* Hiển thị chi nhánh phục vụ & Phí ship tính được */}
-                  {selectedDistrict && selectedWard && (
-                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-2 text-xs">
+                  {selectedWard && (
+                    <div className="rounded-xl border p-3.5 space-y-2 text-xs transition-all">
                       {calculatingFee ? (
-                        <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="flex items-center gap-2 text-muted-foreground py-1">
                           <Loader2 className="size-4 animate-spin text-primary" />
                           <span>Đang kiểm tra chi nhánh phục vụ và tính phí giao hàng...</span>
                         </div>
+                      ) : currentWardInfo && !currentWardInfo.isSupported ? (
+                        <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 space-y-1.5">
+                          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-semibold">
+                            <AlertCircle className="size-4 shrink-0" />
+                            <span>Khu vực này hiện chưa được hỗ trợ giao hàng tận nơi</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground pl-6 leading-relaxed">
+                            <strong>{selectedWard}</strong> nằm ngoài bán kính phục vụ hiện tại của các chi nhánh Hanbi Sushi. Quý khách vui lòng chọn địa chỉ khác hoặc đặt nhận tại quầy.
+                          </p>
+                        </div>
                       ) : shippingCalc ? (
-                        <div className="space-y-2">
+                        <div className="space-y-2 bg-primary/5 border border-primary/20 rounded-lg p-3">
                           <div className="flex items-center justify-between">
                             <span className="font-semibold text-foreground flex items-center gap-1.5">
                               <Store className="size-4 text-primary" />
@@ -623,12 +681,12 @@ export function CheckoutView() {
 
                           {/* Nếu khu vực có nhiều hơn 1 chi nhánh hỗ trợ, cho khách đổi chi nhánh */}
                           {currentWardInfo && currentWardInfo.supportedBranches.length > 1 && (
-                            <div className="pt-1.5 border-t border-primary/10 flex items-center justify-between gap-2">
+                            <div className="pt-1.5 border-t border-primary/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                               <span className="text-muted-foreground">Đổi chi nhánh khác:</span>
                               <select
                                 value={selectedBranchId || shippingCalc.branch?.id}
                                 onChange={(e) => setSelectedBranchId(e.target.value)}
-                                className="rounded-lg h-7 px-2 text-xs bg-card border border-border"
+                                className="rounded-lg h-8 px-2 text-xs bg-card border border-border"
                               >
                                 {currentWardInfo.supportedBranches.map((b) => (
                                   <option key={b.id} value={b.id}>
@@ -647,9 +705,9 @@ export function CheckoutView() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-destructive font-medium">
+                        <div className="flex items-center gap-2 text-destructive font-medium py-1">
                           <AlertCircle className="size-4 shrink-0" />
-                          <span>Khu vực này hiện chưa có chi nhánh nào hỗ trợ giao hàng tận nơi.</span>
+                          <span>Không tìm thấy thông tin phục vụ cho khu vực này.</span>
                         </div>
                       )}
                     </div>
@@ -665,7 +723,7 @@ export function CheckoutView() {
                       placeholder="email@example.com"
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="rounded-xl h-10 sm:h-11 text-sm"
+                      className="rounded-xl h-11 text-base sm:text-sm"
                     />
                   </div>
 
@@ -679,7 +737,7 @@ export function CheckoutView() {
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       rows={2}
-                      className="rounded-xl resize-none text-sm"
+                      className="rounded-xl resize-none text-base sm:text-sm"
                     />
                   </div>
                 </div>
@@ -687,11 +745,17 @@ export function CheckoutView() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={!shippingCalc || calculatingFee}
+                  disabled={!shippingCalc || calculatingFee || (currentWardInfo ? !currentWardInfo.isSupported : false)}
                   className="w-full h-12.5 rounded-xl text-sm sm:text-base font-semibold gap-2 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.99] transition-all"
                 >
-                  <span>Tiếp tục chọn thanh toán</span>
-                  <ArrowRight className="size-4" />
+                  {currentWardInfo && !currentWardInfo.isSupported ? (
+                    <span>Khu vực chưa hỗ trợ giao hàng</span>
+                  ) : (
+                    <>
+                      <span>Tiếp tục chọn thanh toán</span>
+                      <ArrowRight className="size-4" />
+                    </>
+                  )}
                 </Button>
               </form>
             )}
@@ -710,7 +774,7 @@ export function CheckoutView() {
                     </h3>
                     <p className="text-xs text-foreground/90 font-medium flex items-center gap-1.5">
                       <MapPin className="size-3.5 text-primary shrink-0" />
-                      <span>{streetAddress}, {selectedWard}, {selectedDistrict}, TP.HCM</span>
+                      <span>{streetAddress}, {selectedWard}, {selectedDistrict || currentWardInfo?.district}, TP.HCM</span>
                     </p>
                     {shippingCalc?.branch && (
                       <p className="text-[11px] text-muted-foreground">
@@ -818,7 +882,7 @@ export function CheckoutView() {
                         <span>Thông tin tài khoản nhận chuyển khoản:</span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground bg-card p-3 rounded-lg border border-border/60">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground bg-card p-3 rounded-lg border border-border/60">
                         <div>
                           <span>Ngân hàng:</span>
                           <p className="font-semibold text-foreground">
@@ -833,13 +897,13 @@ export function CheckoutView() {
                         </div>
                         <div>
                           <span>Số tài khoản:</span>
-                          <p className="font-mono font-bold text-primary">
+                          <p className="font-mono font-bold text-primary text-sm sm:text-xs">
                             {PAYMENT_CONFIG.vietqr.accountNumber}
                           </p>
                         </div>
                         <div>
                           <span>Số tiền thanh toán:</span>
-                          <p className="font-mono font-bold text-foreground">
+                          <p className="font-mono font-bold text-foreground text-sm sm:text-xs">
                             {formatPrice(calculatedTotal)}
                           </p>
                         </div>
@@ -968,6 +1032,10 @@ export function CheckoutView() {
                   <span className="font-mono font-medium text-foreground">
                     {calculatingFee ? (
                       <Loader2 className="size-3.5 animate-spin inline" />
+                    ) : !selectedWard ? (
+                      <span className="text-muted-foreground text-xs font-sans">Chọn phường/xã</span>
+                    ) : currentWardInfo && !currentWardInfo.isSupported ? (
+                      <span className="text-destructive text-xs font-sans font-medium">Chưa hỗ trợ</span>
                     ) : (
                       formatPrice(currentShippingFee)
                     )}
