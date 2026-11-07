@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   HomeIcon,
   ChevronRight,
+  ArrowLeft,
   Plus,
   Minus,
   ShoppingBag,
@@ -69,10 +70,10 @@ export function ProductDetailView({
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-32 lg:pb-24">
-      {/* ==================== BREADCRUMB ==================== */}
-      <div className="border-b border-border/70 bg-muted/20 py-4">
+      {/* ==================== BREADCRUMB (DESKTOP) ==================== */}
+      <div className="hidden sm:block border-b border-border/70 bg-muted/20 py-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
             <Link
               href="/"
               className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
@@ -104,6 +105,19 @@ export function ProductDetailView({
             </span>
           </nav>
         </div>
+      </div>
+
+      {/* ==================== COMPACT BACK BUTTON (MOBILE) ==================== */}
+      <div className="sm:hidden px-4 pt-3 pb-1">
+        <Link
+          href={product.category ? `/menu?category=${product.category.id}` : "/menu"}
+          className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-muted/60 hover:bg-muted text-xs font-semibold text-foreground transition-all active:scale-95 border border-border/60 shadow-2xs"
+        >
+          <ArrowLeft className="size-3.5 text-primary" />
+          <span className="truncate max-w-[260px]">
+            Quay lại {product.category?.name || "thực đơn"}
+          </span>
+        </Link>
       </div>
 
       {/* ==================== MAIN PRODUCT SECTION ==================== */}
