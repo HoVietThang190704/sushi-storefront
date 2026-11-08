@@ -234,6 +234,8 @@ export function MenuView() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
+                  id="menu-search-input"
+                  name="search"
                   type="text"
                   placeholder="Tìm tên món, loại sushi..."
                   value={searchQuery}
@@ -381,7 +383,7 @@ export function MenuView() {
               id="menu-product-grid"
               className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 scroll-mt-24"
             >
-              {paginatedProducts.map((product) => {
+              {paginatedProducts.map((product, index) => {
               const isAdded = addedProductId === product.id;
               const hasImage = Boolean(product.imageUrl);
 
@@ -404,9 +406,9 @@ export function MenuView() {
                               src={product.imageUrl!}
                               alt={product.name}
                               fill
+                              priority={index === 0}
                               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                               className="object-cover transition-transform duration-500 ease-out group-hover:scale-108"
-                              loading="lazy"
                               fallbackSrc="/images/placeholder-dish.svg"
                               fallbackText={product.name}
                             />
