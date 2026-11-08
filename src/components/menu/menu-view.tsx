@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Category, Product, formatPrice } from "@/lib/api";
+import { Product, formatPrice } from "@/lib/api";
 import { useCategories, useProducts } from "@/hooks/use-queries";
 import { useCartStore } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
@@ -53,34 +53,36 @@ export function MenuView() {
   const isLoading = loadingCategories || loadingProducts;
   const error = catError || prodError ? "Không thể kết nối đến máy chủ" : null;
 
-  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
+  const [internalCategoryId, setInternalCategoryId] = React.useState<string | null | undefined>(undefined);
   const [internalSearchQuery, setInternalSearchQuery] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [addedProductId, setAddedProductId] = React.useState<string | null>(null);
+
+  // Tính toán category được chọn từ URL hoặc từ state nội bộ khi người dùng click
+  const selectedCategoryId = React.useMemo(() => {
+    if (internalCategoryId !== undefined) {
+      return internalCategoryId;
+    }
+    if (!urlCategoryParam || categories.length === 0) {
+      return null;
+    }
+    const target = urlCategoryParam.toLowerCase();
+    const matched = categories.find((c) => {
+      const cname = c.name.toLowerCase();
+      return (
+        cname === target ||
+        cname.includes(target) ||
+        target.includes(cname) ||
+        c.id === urlCategoryParam
+      );
+    });
+    return matched ? matched.id : null;
+  }, [internalCategoryId, urlCategoryParam, categories]);
 
   const searchQuery =
     internalSearchQuery !== null ? internalSearchQuery : urlSearchParam || "";
 
   const addItem = useCartStore((state) => state.addItem);
-
-  // Nếu có query param category từ URL, chọn danh mục tương ứng
-  React.useEffect(() => {
-    if (urlCategoryParam && categories.length > 0) {
-      const target = urlCategoryParam.toLowerCase();
-      const matched = categories.find((c) => {
-        const cname = c.name.toLowerCase();
-        return (
-          cname === target ||
-          cname.includes(target) ||
-          target.includes(cname) ||
-          c.id === urlCategoryParam
-        );
-      });
-      if (matched) {
-        setSelectedCategoryId(matched.id);
-      }
-    }
-  }, [urlCategoryParam, categories]);
 
   const handleRetry = () => {
     refetchCategories();
@@ -175,7 +177,7 @@ export function MenuView() {
   };
 
   const handleCategorySelect = (catId: string | null) => {
-    setSelectedCategoryId(catId);
+    setInternalCategoryId(catId);
     setCurrentPage(1);
     // Cập nhật URL mà không reload trang
     const params = new URLSearchParams(window.location.search);
@@ -189,7 +191,7 @@ export function MenuView() {
   };
 
   const handleClearFilters = () => {
-    setSelectedCategoryId(null);
+    setInternalCategoryId(null);
     setInternalSearchQuery("");
     setCurrentPage(1);
     router.replace("/menu", { scroll: false });
