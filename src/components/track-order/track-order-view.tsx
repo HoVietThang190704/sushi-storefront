@@ -306,7 +306,7 @@ export function TrackOrderView() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-24">
       {/* ==================== BREADCRUMB ==================== */}
-      <div className="border-b border-border/70 bg-muted/20 py-4">
+      <div className="hidden sm:block border-b border-border/70 bg-muted/20 py-4">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 flex items-center gap-2 text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
             <span>Trang chủ</span>
@@ -316,7 +316,7 @@ export function TrackOrderView() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-8 sm:pt-12">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-6 sm:pt-12">
         {/* ==================== HEADER ==================== */}
         <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground tracking-tight">

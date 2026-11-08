@@ -22,7 +22,8 @@ export function Footer() {
     pathname === "/checkout" ||
     pathname === "/order-success" ||
     pathname === "/menu" ||
-    pathname?.startsWith("/menu/");
+    pathname?.startsWith("/menu/") ||
+    pathname === "/track-order";
 
   return (
     <footer
