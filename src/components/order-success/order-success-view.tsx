@@ -10,7 +10,6 @@ import {
   ShoppingBag,
   ChefHat,
   Package,
-  Store,
   Clock,
   Sparkles,
   ArrowRight,
@@ -21,7 +20,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { trackOrder, TrackOrderResponse } from "@/lib/api";
+import { useTrackOrder } from "@/hooks/use-queries";
 import { io, Socket } from "socket.io-client";
 
 function getDeliveryStep(status?: string): number {
@@ -47,28 +46,8 @@ export function OrderSuccessView() {
   const token = searchParams.get("token") || "";
   const [copied, setCopied] = React.useState(false);
 
-  // Trạng thái đơn hàng thực tế & realtime
-  const [order, setOrder] = React.useState<TrackOrderResponse | null>(null);
-  const [loading, setLoading] = React.useState(false);
-
-  // 1. Tải trạng thái ban đầu của đơn hàng
-  const loadOrderDetail = React.useCallback(async (silent = false) => {
-    if (!orderCode || orderCode === "ORD-PENDING" || !token) return;
-    if (!silent) setLoading(true);
-
-    try {
-      const data = await trackOrder(orderCode, token);
-      setOrder(data);
-    } catch (err) {
-      console.warn("Could not fetch order status on success page:", err);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [orderCode, token]);
-
-  React.useEffect(() => {
-    loadOrderDetail(false);
-  }, [loadOrderDetail]);
+  // Trạng thái đơn hàng thực tế lấy qua TanStack Query (tự động fetch, không cascading render)
+  const { data: order = null, refetch: refreshOrderDetail } = useTrackOrder(orderCode, token);
 
   // 2. Kết nối WebSocket để cập nhật Realtime khi quầy bếp chuyển trạng thái
   React.useEffect(() => {
@@ -98,18 +77,18 @@ export function OrderSuccessView() {
         toast.info("Tiến trình đơn hàng vừa được cập nhật!", {
           description: `Đơn ${orderCode} đã chuyển trạng thái mới.`,
         });
-        loadOrderDetail(true);
+        refreshOrderDetail();
       }
     });
 
     socket.io.on("reconnect", () => {
-      loadOrderDetail(true);
+      refreshOrderDetail();
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [orderCode, order?.trackingTicket, order?.status, loadOrderDetail]);
+  }, [orderCode, order?.trackingTicket, order?.status, refreshOrderDetail]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(orderCode);

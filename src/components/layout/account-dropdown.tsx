@@ -13,27 +13,40 @@ interface RecentOrderLocal {
   createdAt: string;
 }
 
+function getRecentOrderSnapshot(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem("hanbi_recent_orders");
+  } catch {
+    return null;
+  }
+}
+
+function subscribeToStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
 export function AccountDropdown() {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [recentOrder, setRecentOrder] = React.useState<RecentOrderLocal | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
-  // Đọc đơn hàng gần nhất từ localStorage
-  React.useEffect(() => {
+  const storedOrders = React.useSyncExternalStore(
+    subscribeToStorage,
+    getRecentOrderSnapshot,
+    () => null
+  );
+
+  // Đọc đơn hàng gần nhất từ localStorage an toàn cho SSR và không cascading render
+  const recentOrder = React.useMemo(() => {
+    if (!storedOrders) return null;
     try {
-      if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("hanbi_recent_orders");
-        if (stored) {
-          const list: RecentOrderLocal[] = JSON.parse(stored);
-          if (list && list.length > 0) {
-            setRecentOrder(list[0]);
-          }
-        }
-      }
+      const list: RecentOrderLocal[] = JSON.parse(storedOrders);
+      return list && list.length > 0 ? list[0] : null;
     } catch {
-      // ignore
+      return null;
     }
-  }, [isOpen]);
+  }, [storedOrders]);
 
   // Đóng dropdown khi click ra ngoài
   React.useEffect(() => {

@@ -33,7 +33,6 @@ import {
   formatPrice,
   createOrder,
   calculateShippingFee,
-  type WardLocationItem,
   type ShippingCalculationResult,
 } from "@/lib/api";
 import { useShippingLocations } from "@/hooks/use-queries";
@@ -79,8 +78,8 @@ export function CheckoutView() {
   const [isBranchModalOpen, setIsBranchModalOpen] = React.useState(false);
 
   // Dữ liệu vị trí & phí ship quản lý bằng TanStack Query (tự động cache và lấy lại khi cần)
-  const { data: locations = [], isLoading: loadingLocations } = useShippingLocations();
-  const [shippingCalc, setShippingCalc] = React.useState<ShippingCalculationResult | null>(null);
+  const { data: locations = [] } = useShippingLocations();
+  const [rawShippingCalc, setRawShippingCalc] = React.useState<ShippingCalculationResult | null>(null);
   const [calculatingFee, setCalculatingFee] = React.useState(false);
 
   // Danh sách các Phường/Xã lọc theo ô tìm kiếm (tìm theo tên mới hoặc tên cũ) và tab lọc
@@ -131,16 +130,17 @@ export function CheckoutView() {
     return locations.find((loc) => loc.ward === selectedWard);
   }, [locations, selectedWard]);
 
+  // Phí ship suy ra từ kết quả tính toán và địa chỉ hợp lệ
+  const shippingCalc = React.useMemo(() => {
+    if (!selectedWard || (currentWardInfo && !currentWardInfo.isSupported)) {
+      return null;
+    }
+    return rawShippingCalc;
+  }, [selectedWard, currentWardInfo, rawShippingCalc]);
+
   // 2. Tính lại phí ship khi đổi Ward hoặc BranchId
   React.useEffect(() => {
-    if (!selectedWard) {
-      setShippingCalc(null);
-      return;
-    }
-
-    // Nếu ward này không được hỗ trợ giao hàng
-    if (currentWardInfo && !currentWardInfo.isSupported) {
-      setShippingCalc(null);
+    if (!selectedWard || (currentWardInfo && !currentWardInfo.isSupported)) {
       return;
     }
 
@@ -160,12 +160,12 @@ export function CheckoutView() {
           branchId: branchToSend,
         });
         if (active) {
-          setShippingCalc(res);
+          setRawShippingCalc(res);
         }
       } catch (err) {
         if (active) {
           console.error("calculateShippingFee error:", err);
-          setShippingCalc(null);
+          setRawShippingCalc(null);
         }
       } finally {
         if (active) setCalculatingFee(false);
@@ -207,7 +207,6 @@ export function CheckoutView() {
 
   const subtotalPrice = totalPrice();
   const currentShippingFee = shippingCalc?.fee || 0;
-  const isDeliverySupported = Boolean(currentWardInfo?.isSupported && shippingCalc);
   const calculatedTotal = subtotalPrice + (shippingCalc ? currentShippingFee : 0);
 
   // Validate Bước 1 và chuyển sang Bước 2

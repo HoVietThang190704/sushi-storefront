@@ -42,10 +42,10 @@ export function useShippingLocations() {
   });
 }
 
-export function useTrackOrder(orderCode?: string) {
+export function useTrackOrder(orderCode?: string, token?: string) {
   return useQuery<TrackOrderResponse | null>({
-    queryKey: queryKeys.orderTracking(orderCode),
-    queryFn: () => (orderCode ? trackOrder(orderCode) : Promise.resolve(null)),
-    enabled: Boolean(orderCode && orderCode.trim().length > 0),
+    queryKey: ["orders", "track", orderCode, token],
+    queryFn: () => (orderCode ? trackOrder(orderCode, token) : Promise.resolve(null)),
+    enabled: Boolean(orderCode && orderCode.trim().length > 0 && orderCode !== "ORD-PENDING"),
   });
 }

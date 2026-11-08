@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChefHat,
   Package,
-  Store,
   XCircle,
   AlertCircle,
   Copy,
@@ -92,6 +91,20 @@ function getStatusBadge(status: string) {
   }
 }
 
+function getRecentOrdersSnapshot(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem("hanbi_recent_orders");
+  } catch {
+    return null;
+  }
+}
+
+function subscribeToStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
 export function TrackOrderView() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -109,28 +122,27 @@ export function TrackOrderView() {
   const [refreshing, setRefreshing] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
 
+  const storedRecent = React.useSyncExternalStore(
+    subscribeToStorage,
+    getRecentOrdersSnapshot,
+    () => null
+  );
+
   // Đơn hàng gần đây từ localStorage
-  const [recentOrders, setRecentOrders] = React.useState<RecentOrderLocal[]>([]);
+  const recentOrders = React.useMemo(() => {
+    if (!storedRecent) return [];
+    try {
+      const list: RecentOrderLocal[] = JSON.parse(storedRecent);
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  }, [storedRecent]);
 
   // Modal hủy đơn
   const [showCancelModal, setShowCancelModal] = React.useState(false);
   const [cancelReason, setCancelReason] = React.useState("");
   const [isCancelling, setIsCancelling] = React.useState(false);
-
-  // Đọc danh sách đơn gần đây
-  React.useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        const stored = localStorage.getItem("hanbi_recent_orders");
-        if (stored) {
-          const list: RecentOrderLocal[] = JSON.parse(stored);
-          setRecentOrders(list);
-        }
-      }
-    } catch (e) {
-      console.warn("Could not read recent orders from storage", e);
-    }
-  }, []);
 
   const executeTrack = React.useCallback(
     async (codeToTrack: string, tokenToTrack?: string, phoneToTrack?: string, isSilent = false) => {
@@ -194,10 +206,51 @@ export function TrackOrderView() {
 
   // Tự động tra cứu nếu URL có sẵn code và token/phone
   React.useEffect(() => {
-    if (queryCode && (queryToken || queryPhone)) {
-      executeTrack(queryCode, queryToken, queryPhone, true);
+    if (!queryCode || (!queryToken && !queryPhone)) return;
+    let active = true;
+
+    async function autoTrack() {
+      let token = queryToken?.trim();
+      if (!token && typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("hanbi_recent_orders");
+          if (stored) {
+            const list: RecentOrderLocal[] = JSON.parse(stored);
+            const found = list.find((o) => o.code === queryCode.trim());
+            if (found?.token) {
+              token = found.token;
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      try {
+        const data = await trackOrder(queryCode.trim(), token, queryPhone?.trim());
+        if (active) {
+          setOrder(data);
+          setInputCode(data.code);
+          if (data.customerPhone) {
+            setInputPhone(data.customerPhone);
+          }
+          if (token) {
+            setActiveToken(token);
+          }
+        }
+      } catch (err) {
+        if (active) {
+          console.error("Auto track error:", err);
+          setOrder(null);
+        }
+      }
     }
-  }, [queryCode, queryToken, queryPhone, executeTrack]);
+
+    autoTrack();
+    return () => {
+      active = false;
+    };
+  }, [queryCode, queryToken, queryPhone]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
