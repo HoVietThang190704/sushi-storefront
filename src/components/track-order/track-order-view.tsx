@@ -685,27 +685,29 @@ export function TrackOrderView() {
             </div>
 
             {/* CHI TIẾT MÓN ĂN & THÔNG TIN KHÁCH */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {/* DANH SÁCH MÓN (2 CỘT) */}
-              <div className="md:col-span-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
+              <div className="md:col-span-2 rounded-2xl border border-border/80 bg-card p-4 sm:p-6 shadow-xs space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-border/70">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                    <ShoppingBag className="size-4 text-primary" />
+                  <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                    <ShoppingBag className="size-4 text-emerald-600 dark:text-emerald-400" />
                     <span>Món đã đặt ({order.items?.length || 0})</span>
                   </h3>
-                  <span className="text-xs text-muted-foreground">Giao tận nơi</span>
+                  <span className="text-2xs sm:text-xs text-muted-foreground font-medium px-2.5 py-0.5 rounded-full bg-secondary">
+                    Giao tận nơi
+                  </span>
                 </div>
 
                 <div className="divide-y divide-border/60">
                   {order.items?.map((item) => (
-                    <div key={item.id} className="py-3 flex items-center justify-between gap-3 text-sm">
-                      <div className="space-y-0.5">
-                        <span className="font-medium text-foreground block">{item.productName}</span>
-                        <span className="text-xs text-muted-foreground">
+                    <div key={item.id} className="py-2.5 sm:py-3 flex items-center justify-between gap-3 text-xs sm:text-sm">
+                      <div className="space-y-0.5 min-w-0">
+                        <span className="font-medium text-foreground block truncate">{item.productName}</span>
+                        <span className="text-2xs text-muted-foreground font-mono">
                           {formatPrice(item.unitPrice)} × {item.quantity}
                         </span>
                       </div>
-                      <span className="font-semibold text-foreground font-mono">
+                      <span className="font-semibold text-foreground font-mono shrink-0">
                         {formatPrice(item.subtotal)}
                       </span>
                     </div>
@@ -713,9 +715,9 @@ export function TrackOrderView() {
                 </div>
 
                 {order.shippingFee !== undefined && Number(order.shippingFee) > 0 && (
-                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="pt-2.5 border-t border-border/60 flex items-center justify-between text-2xs sm:text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <Truck className="size-3.5 text-primary" />
+                      <Truck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>Phí giao hàng:</span>
                     </span>
                     <span className="font-mono font-medium text-foreground">
@@ -725,64 +727,65 @@ export function TrackOrderView() {
                 )}
 
                 <div className="pt-3 border-t border-border/80 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">Tổng thanh toán:</span>
-                  <span className="text-lg font-bold font-mono text-primary">
+                  <span className="text-xs sm:text-sm font-semibold text-foreground">Tổng thanh toán:</span>
+                  <span className="text-base sm:text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">
                     {formatPrice(order.totalAmount)}
                   </span>
                 </div>
               </div>
 
               {/* THÔNG TIN NHẬN MÓN (1 CỘT) */}
-              <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm space-y-4 self-start">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground pb-3 border-b border-border/70">
-                  Thông tin giao hàng
+              <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-6 shadow-xs space-y-4 self-start">
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground pb-3 border-b border-border/70 flex items-center gap-2">
+                  <MapPin className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Thông tin giao hàng</span>
                 </h3>
 
                 <div className="space-y-3 text-xs">
-                  <div className="flex items-start gap-2">
-                    <User className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-muted-foreground block">Người nhận:</span>
+                  <div className="flex items-start gap-2.5">
+                    <User className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1 flex items-baseline justify-between gap-1 flex-wrap">
+                      <span className="text-muted-foreground text-2xs">Người nhận:</span>
                       <span className="font-semibold text-foreground">{order.customerName}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2">
-                    <Phone className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-muted-foreground block">Số điện thoại:</span>
+                  <div className="flex items-start gap-2.5">
+                    <Phone className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1 flex items-baseline justify-between gap-1 flex-wrap">
+                      <span className="text-muted-foreground text-2xs">Số điện thoại:</span>
                       <span className="font-semibold text-foreground font-mono">{order.customerPhone}</span>
                     </div>
                   </div>
 
                   {order.address && (
-                    <div className="flex items-start gap-2">
-                      <MapPin className="size-4 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-muted-foreground block">Địa chỉ nhận hàng:</span>
-                        <span className="font-semibold text-foreground leading-relaxed block">
+                    <div className="flex items-start gap-2.5">
+                      <MapPin className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-muted-foreground text-2xs block">Địa chỉ nhận hàng:</span>
+                        <span className="font-semibold text-foreground leading-relaxed block mt-0.5">
                           {order.address}
                         </span>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex items-start gap-2">
-                    <CreditCard className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-muted-foreground block">Hình thức thanh toán:</span>
-                      <span className="font-semibold text-foreground">
+                  <div className="flex items-start gap-2.5 pt-1">
+                    <CreditCard className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-muted-foreground text-2xs block">Hình thức thanh toán:</span>
+                      <span className="font-semibold text-foreground block mt-0.5">
                         {order.paymentMethod === "VIETQR"
                           ? "Chuyển khoản VietQR"
                           : "Tiền mặt khi nhận hàng (COD)"}
                       </span>
                       <div className="mt-1">
                         {order.paymentStatus === "PAID" ? (
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px]">
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-3xs">
                             Đã thanh toán
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px]">
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-3xs">
                             Chờ thanh toán (COD)
                           </Badge>
                         )}
@@ -791,26 +794,30 @@ export function TrackOrderView() {
                   </div>
 
                   {order.note && (
-                    <div className="flex items-start gap-2 pt-2 border-t border-border/60">
-                      <FileText className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-muted-foreground block">Ghi chú:</span>
-                        <p className="italic text-foreground mt-0.5">{order.note}</p>
+                    <div className="flex items-start gap-2.5 pt-2 border-t border-border/60">
+                      <FileText className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-muted-foreground text-2xs block">Ghi chú:</span>
+                        <p className="italic text-foreground mt-0.5 leading-relaxed">{order.note}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* HỖ TRỢ */}
-                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 text-xs space-y-1.5 mt-4">
-                  <span className="font-semibold text-foreground flex items-center gap-1.5">
-                    <PhoneCall className="size-3.5 text-primary" />
-                    Cần hỗ trợ đơn hàng?
-                  </span>
-                  <p className="text-[11px] text-muted-foreground">
-                    Hotline Hanbi Sushi: <strong className="text-primary font-mono">1900 6868</strong> (08:00 - 22:00)
-                  </p>
-                </div>
+                {/* HỖ TRỢ GỌI HOTLINE TRỰC TIẾP */}
+                <a
+                  href="tel:19006868"
+                  className="p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/60 text-xs flex items-center justify-between transition-colors mt-3 group"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <PhoneCall className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="font-semibold text-foreground block text-2xs">Cần hỗ trợ đơn hàng?</span>
+                      <span className="text-3xs text-muted-foreground">Hotline: <strong className="font-mono text-foreground">1900 6868</strong></span>
+                    </div>
+                  </div>
+                  <span className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:underline">Gọi ngay</span>
+                </a>
               </div>
             </div>
           </div>
