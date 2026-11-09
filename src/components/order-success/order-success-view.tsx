@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useTrackOrder } from "@/hooks/use-queries";
 import { formatPrice } from "@/lib/api";
+import { SITE_CONFIG } from "@/config/site.config";
 import { io, Socket } from "socket.io-client";
 
 function getDeliveryStep(status?: string): number {
@@ -191,7 +192,13 @@ export function OrderSuccessView() {
                 <XCircle className="size-5 shrink-0" />
                 <div>
                   <span className="font-bold block">Đơn hàng này đã bị hủy</span>
-                  <span className="text-2xs text-muted-foreground">Vui lòng liên hệ hotline 1900 6868 nếu cần hỗ trợ.</span>
+                  <span className="text-2xs text-muted-foreground">
+                    Vui lòng liên hệ hotline{" "}
+                    <a href={`tel:${SITE_CONFIG.hotlineTel}`} className="underline font-mono text-foreground">
+                      {SITE_CONFIG.hotline}
+                    </a>{" "}
+                    nếu cần hỗ trợ.
+                  </span>
                 </div>
               </div>
             ) : (

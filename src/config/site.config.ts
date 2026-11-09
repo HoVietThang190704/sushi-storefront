@@ -5,7 +5,8 @@ export const SITE_CONFIG = {
   slogan: "Thưởng Thức Sushi Nhật Bản Chuẩn Vị",
   description:
     "Đặt món sushi trực tuyến giao hàng tận nơi nhanh chóng, tiện lợi và tươi ngon mỗi ngày",
-  hotline: "1900 8888",
+  hotline: "1900 6868",
+  hotlineTel: "19006868",
 } as const;
 
 // Cấu hình chuyển khoản thanh toán VietQR

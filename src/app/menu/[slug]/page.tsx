@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchProductBySlug, fetchProducts, formatPrice } from "@/lib/api";
+import { fetchProductBySlug, fetchProducts, formatPrice, type Product } from "@/lib/api";
 import { ProductDetailView } from "@/components/menu/product-detail-view";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -72,9 +72,14 @@ async function ProductDetailContent({
     notFound();
   }
 
-  // Tải các món ăn liên quan cùng danh mục
-  const categoryProducts = await fetchProducts(product.categoryId || undefined);
-  const relatedProducts = categoryProducts.filter((p) => p.id !== product.id);
+  // Tải các món ăn liên quan cùng danh mục (không làm sập trang chính nếu danh sách liên quan lỗi)
+  let relatedProducts: Product[] = [];
+  try {
+    const categoryProducts = await fetchProducts(product.categoryId || undefined);
+    relatedProducts = categoryProducts.filter((p) => p.id !== product.id);
+  } catch (err) {
+    console.warn("Could not load related products for detail page:", err);
+  }
 
   return (
     <ProductDetailView

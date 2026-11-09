@@ -34,6 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { trackOrder, cancelGuestOrder, formatPrice, TrackOrderResponse } from "@/lib/api";
+import { SITE_CONFIG } from "@/config/site.config";
 import { toast } from "sonner";
 import { io, Socket } from "socket.io-client";
 
@@ -189,9 +190,7 @@ export function TrackOrderView() {
         const data = await trackOrder(cleanCode, token || undefined, phone || undefined);
         setOrder(data);
         setShowSearchForm(false);
-        if (token) {
-          setActiveToken(token);
-        }
+        setActiveToken(token || "");
         if (!isSilent) {
           toast.success("Đã tìm thấy thông tin đơn hàng!");
         }
@@ -239,9 +238,7 @@ export function TrackOrderView() {
           if (data.customerPhone) {
             setInputPhone(data.customerPhone);
           }
-          if (token) {
-            setActiveToken(token);
-          }
+          setActiveToken(token || "");
         }
       } catch (err) {
         if (active) {
@@ -288,7 +285,7 @@ export function TrackOrderView() {
   const handleCancelOrder = async () => {
     if (!order) return;
     if (!activeToken) {
-      toast.error("Bạn đang tra cứu bằng số điện thoại. Để hủy đơn, vui lòng mở lại thiết bị hoặc liên hệ hotline 1900 6868.");
+      toast.error(`Bạn đang tra cứu bằng số điện thoại. Để hủy đơn, vui lòng mở lại thiết bị hoặc liên hệ hotline ${SITE_CONFIG.hotline}.`);
       return;
     }
 
@@ -677,7 +674,10 @@ export function TrackOrderView() {
                     </p>
                     <p>
                       Đơn hàng đã bắt đầu chế biến nên không thể tự hủy trên web. Nếu cần thay đổi gấp, vui lòng gọi hotline{" "}
-                      <strong className="text-primary">1900 6868</strong> để nhân viên hỗ trợ trực tiếp.
+                      <a href={`tel:${SITE_CONFIG.hotlineTel}`} className="text-primary font-bold hover:underline font-mono">
+                        {SITE_CONFIG.hotline}
+                      </a>{" "}
+                      để nhân viên hỗ trợ trực tiếp.
                     </p>
                   </div>
                 </div>
@@ -806,14 +806,14 @@ export function TrackOrderView() {
 
                 {/* HỖ TRỢ GỌI HOTLINE TRỰC TIẾP */}
                 <a
-                  href="tel:19006868"
+                  href={`tel:${SITE_CONFIG.hotlineTel}`}
                   className="p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/60 text-xs flex items-center justify-between transition-colors mt-3 group"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <PhoneCall className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="min-w-0">
                       <span className="font-semibold text-foreground block text-2xs">Cần hỗ trợ đơn hàng?</span>
-                      <span className="text-3xs text-muted-foreground">Hotline: <strong className="font-mono text-foreground">1900 6868</strong></span>
+                      <span className="text-3xs text-muted-foreground">Hotline: <strong className="font-mono text-foreground">{SITE_CONFIG.hotline}</strong></span>
                     </div>
                   </div>
                   <span className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:underline">Gọi ngay</span>

@@ -54,58 +54,43 @@ export function formatPrice(amount: number | string): string {
 }
 
 export async function fetchCategories(): Promise<Category[]> {
-  try {
-    const baseUrl = getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/catalog/categories`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch categories: ${res.statusText}`);
-    }
-    const json: ApiResponse<Category[]> = await res.json();
-    return json.data || [];
-  } catch (error) {
-    console.error("fetchCategories error:", error);
-    return [];
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/catalog/categories`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch categories: ${res.statusText}`);
   }
+  const json: ApiResponse<Category[]> = await res.json();
+  return json.data || [];
 }
 
 export async function fetchProducts(categoryId?: string): Promise<Product[]> {
-  try {
-    const baseUrl = getBaseUrl();
-    const path = categoryId
-      ? `/api/catalog/products?categoryId=${encodeURIComponent(categoryId)}`
-      : "/api/catalog/products";
-    const res = await fetch(`${baseUrl}${path}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch products: ${res.statusText}`);
-    }
-    const json: ApiResponse<Product[]> = await res.json();
-    return json.data || [];
-  } catch (error) {
-    console.error("fetchProducts error:", error);
-    return [];
+  const baseUrl = getBaseUrl();
+  const path = categoryId
+    ? `/api/catalog/products?categoryId=${encodeURIComponent(categoryId)}`
+    : "/api/catalog/products";
+  const res = await fetch(`${baseUrl}${path}`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch products: ${res.statusText}`);
   }
+  const json: ApiResponse<Product[]> = await res.json();
+  return json.data || [];
 }
 
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
-  try {
-    const baseUrl = getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/catalog/products/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) {
-      if (res.status === 404) return null;
-      throw new Error(`Failed to fetch product: ${res.statusText}`);
-    }
-    const json: ApiResponse<Product> = await res.json();
-    return json.data || null;
-  } catch (error) {
-    console.error("fetchProductBySlug error:", error);
-    return null;
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/catalog/products/${encodeURIComponent(slug)}`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Failed to fetch product: ${res.statusText}`);
   }
+  const json: ApiResponse<Product> = await res.json();
+  return json.data || null;
 }
 
 export interface CreateOrderPayload {
@@ -159,20 +144,15 @@ export interface ShippingCalculationResult {
 }
 
 export async function fetchShippingLocations(): Promise<WardLocationItem[]> {
-  try {
-    const baseUrl = getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/shipping/locations`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch shipping locations: ${res.statusText}`);
-    }
-    const json: ApiResponse<WardLocationItem[]> = await res.json();
-    return json.data || [];
-  } catch (error) {
-    console.error("fetchShippingLocations error:", error);
-    return [];
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/shipping/locations`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch shipping locations: ${res.statusText}`);
   }
+  const json: ApiResponse<WardLocationItem[]> = await res.json();
+  return json.data || [];
 }
 
 export async function calculateShippingFee(params: {

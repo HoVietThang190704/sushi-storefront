@@ -25,8 +25,6 @@ import {
   Store,
   Truck,
   AlertCircle,
-  Search,
-  X,
 } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import {
@@ -44,6 +42,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { AddressSelectionModal } from "@/components/checkout/address-selection-modal";
+import { BranchSelectionModal } from "@/components/checkout/branch-selection-modal";
 
 export function CheckoutView() {
   const router = useRouter();
@@ -71,8 +71,6 @@ export function CheckoutView() {
 
   // Modal / Sheet tìm kiếm Phường/Xã (Tên mới & Tên cũ)
   const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
-  const [searchWardQuery, setSearchWardQuery] = React.useState("");
-  const [wardFilterTab, setWardFilterTab] = React.useState<"all" | "supported">("all");
 
   // Modal / Sheet đổi chi nhánh phục vụ
   const [isBranchModalOpen, setIsBranchModalOpen] = React.useState(false);
@@ -81,48 +79,6 @@ export function CheckoutView() {
   const { data: locations = [] } = useShippingLocations();
   const [rawShippingCalc, setRawShippingCalc] = React.useState<ShippingCalculationResult | null>(null);
   const [calculatingFee, setCalculatingFee] = React.useState(false);
-
-  // Danh sách các Phường/Xã lọc theo ô tìm kiếm (tìm theo tên mới hoặc tên cũ) và tab lọc
-  const filteredWards = React.useMemo(() => {
-    let list = locations;
-    if (wardFilterTab === "supported") {
-      list = list.filter((l) => l.isSupported);
-    }
-
-    const q = searchWardQuery.trim().toLowerCase();
-    if (!q) {
-      return list.slice().sort((a, b) => {
-        // Đưa các phường có giao hàng lên trước
-        if (a.isSupported !== b.isSupported) {
-          return a.isSupported ? -1 : 1;
-        }
-        return a.ward.localeCompare(b.ward, "vi");
-      });
-    }
-
-    return list
-      .filter((loc) => {
-        const matchName = loc.ward.toLowerCase().includes(q);
-        const matchFormer = loc.formerWards
-          ? loc.formerWards.toLowerCase().includes(q)
-          : false;
-        const matchDistrict = loc.district
-          ? loc.district.toLowerCase().includes(q)
-          : false;
-        return matchName || matchFormer || matchDistrict;
-      })
-      .sort((a, b) => {
-        if (a.isSupported !== b.isSupported) {
-          return a.isSupported ? -1 : 1;
-        }
-        return a.ward.localeCompare(b.ward, "vi");
-      });
-  }, [locations, searchWardQuery, wardFilterTab]);
-
-  // Số lượng phường/xã có hỗ trợ giao hàng
-  const supportedWardsCount = React.useMemo(() => {
-    return locations.filter((l) => l.isSupported).length;
-  }, [locations]);
 
   // Thông tin Phường/Xã hiện tại được chọn
   const currentWardInfo = React.useMemo(() => {
@@ -133,6 +89,10 @@ export function CheckoutView() {
   // Phí ship suy ra từ kết quả tính toán và địa chỉ hợp lệ
   const shippingCalc = React.useMemo(() => {
     if (!selectedWard || (currentWardInfo && !currentWardInfo.isSupported)) {
+      return null;
+    }
+    // Chỉ chấp nhận kết quả tính phí nếu khớp với đúng phường/xã hiện tại
+    if (rawShippingCalc && rawShippingCalc.ward !== selectedWard) {
       return null;
     }
     return rawShippingCalc;
@@ -242,6 +202,11 @@ export function CheckoutView() {
       return;
     }
 
+    if (calculatingFee) {
+      toast.info("Đang tính phí giao hàng cho khu vực của bạn, vui lòng đợi trong giây lát...");
+      return;
+    }
+
     if (!shippingCalc) {
       toast.error("Chưa tính được phí giao hàng cho khu vực này");
       return;
@@ -254,6 +219,11 @@ export function CheckoutView() {
   // Xác nhận đặt hàng ở Bước 2
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (calculatingFee) {
+      toast.info("Đang cập nhật phí giao hàng, vui lòng đợi trong giây lát...");
+      return;
+    }
 
     if (!shippingCalc) {
       toast.error("Khu vực giao hàng không hợp lệ!");
@@ -592,11 +562,7 @@ export function CheckoutView() {
                     {!selectedWard ? (
                       <button
                         type="button"
-                        onClick={() => {
-                          setSearchWardQuery("");
-                          setWardFilterTab("all");
-                          setIsAddressModalOpen(true);
-                        }}
+                        onClick={() => setIsAddressModalOpen(true)}
                         className="w-full text-left p-3.5 sm:p-4 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 active:scale-[0.99] transition-all flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-3">
@@ -649,11 +615,7 @@ export function CheckoutView() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setSearchWardQuery("");
-                            setWardFilterTab("all");
-                            setIsAddressModalOpen(true);
-                          }}
+                          onClick={() => setIsAddressModalOpen(true)}
                           className="h-8 text-xs font-semibold text-primary border-primary/30 hover:bg-primary/10 px-2.5 shrink-0 rounded-lg"
                         >
                           <Edit3 className="size-3 mr-1" />
@@ -963,7 +925,7 @@ export function CheckoutView() {
                     <Button
                       type="submit"
                       size="lg"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || calculatingFee || !shippingCalc}
                       className="w-full sm:flex-1 h-12.5 rounded-xl text-sm sm:text-base font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                     >
                       {isSubmitting ? (
@@ -1098,312 +1060,30 @@ export function CheckoutView() {
         </div>
       </div>
 
-      {/* ==================== MODAL / SHEET TÌM KIẾM PHƯỜNG / XÃ (TÊN MỚI & CŨ) ==================== */}
-      {isAddressModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div
-            className="w-full max-w-lg bg-card border border-border/80 shadow-2xl rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[90vh] sm:max-h-[82vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
-            role="dialog"
-            aria-modal="true"
-          >
-            {/* Thanh kéo vuốt trên mobile */}
-            <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto my-2.5 shrink-0 sm:hidden" />
-
-            {/* Header Modal */}
-            <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between shrink-0 bg-muted/20">
-              <div className="flex items-center gap-2">
-                <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                  <MapPin className="size-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm sm:text-base text-foreground">
-                    Chọn Phường / Xã TP.HCM
-                  </h3>
-                  <p className="text-3xs text-muted-foreground">
-                    Chuẩn 168 đơn vị hành chính & tra cứu tên cũ
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAddressModalOpen(false)}
-                className="size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                aria-label="Đóng"
-              >
-                <X className="size-4.5" />
-              </button>
-            </div>
-
-            {/* Ô tìm kiếm thông minh & Tabs lọc */}
-            <div className="p-3 sm:p-3.5 border-b border-border/60 shrink-0 bg-card space-y-2.5">
-              <div className="relative">
-                <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <Input
-                  type="text"
-                  autoFocus
-                  placeholder="Tìm tên mới hoặc tên cũ (Bến Nghé, Đa Kao, Võ Thị Sáu...)"
-                  value={searchWardQuery}
-                  onChange={(e) => setSearchWardQuery(e.target.value)}
-                  className="pl-9.5 pr-8 h-10.5 rounded-xl text-sm bg-muted/30 focus-visible:bg-background"
-                />
-                {searchWardQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchWardQuery("")}
-                    className="size-6 absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                    aria-label="Xóa tìm kiếm"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Tabs lọc: Tất cả vs Có giao hàng */}
-              <div className="flex items-center gap-1.5 pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => setWardFilterTab("all")}
-                  className={cn(
-                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all",
-                    wardFilterTab === "all"
-                      ? "bg-primary text-primary-foreground shadow-xs"
-                      : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  Tất cả ({locations.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWardFilterTab("supported")}
-                  className={cn(
-                    "px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1",
-                    wardFilterTab === "supported"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Có giao hàng ({supportedWardsCount})</span>
-                </button>
-              </div>
-
-              {/* Gợi ý tìm nhanh 1-chạm */}
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-2xs text-muted-foreground">
-                <span className="shrink-0 text-muted-foreground/70">Gợi ý:</span>
-                {["Bến Nghé", "Đa Kao", "Võ Thị Sáu", "Thảo Điền", "An Khánh", "Tân Định"].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => setSearchWardQuery(tag)}
-                    className="px-2 py-0.5 rounded-md bg-muted/40 hover:bg-muted text-foreground/80 hover:text-primary shrink-0 transition-colors border border-border/40"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Danh sách Phường / Xã */}
-            <div className="flex-1 overflow-y-auto divide-y divide-border/40 p-1.5">
-              {filteredWards.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground space-y-2">
-                  <MapPin className="size-8 mx-auto text-muted-foreground/40" />
-                  <p className="text-sm font-medium">Không tìm thấy phường/xã nào phù hợp</p>
-                  <p className="text-xs">Hãy thử tìm theo tên phường mới hoặc tên phường/quận cũ</p>
-                  {wardFilterTab === "supported" && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setWardFilterTab("all")}
-                      className="mt-2 text-xs"
-                    >
-                      Xem tất cả 168 phường/xã
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                filteredWards.map((w) => {
-                  const isSelected = selectedWard === w.ward;
-                  return (
-                    <button
-                      key={w.wardCode || w.ward}
-                      type="button"
-                      onClick={() => {
-                        setSelectedWard(w.ward);
-                        setSelectedDistrict(w.district);
-                        setSelectedBranchId("");
-                        setIsAddressModalOpen(false);
-                      }}
-                      className={cn(
-                        "w-full text-left px-3.5 py-3 rounded-xl flex items-start justify-between gap-3 transition-colors",
-                        isSelected
-                          ? "bg-primary/10 border border-primary/30"
-                          : "hover:bg-muted/40 active:bg-muted/60"
-                      )}
-                    >
-                      <div className="space-y-1 min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={cn(
-                              "text-sm font-semibold truncate",
-                              isSelected ? "text-primary font-bold" : "text-foreground"
-                            )}
-                          >
-                            {w.ward}
-                          </span>
-                          {w.isSupported ? (
-                            <span className="text-3xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                              Có giao hàng
-                            </span>
-                          ) : (
-                            <span className="text-3xs px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground shrink-0">
-                              Chưa hỗ trợ
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-muted-foreground">
-                          {w.district}
-                          {w.formerWards && (
-                            <span className="text-muted-foreground/80"> • Trước đây: {w.formerWards}</span>
-                          )}
-                        </p>
-                      </div>
-
-                      {isSelected && (
-                        <div className="size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="size-3.5 stroke-[3]" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Footer Modal */}
-            <div className="p-3 border-t border-border/60 shrink-0 bg-muted/20 flex items-center justify-between text-2xs text-muted-foreground px-4">
-              <span>Đang hiển thị {filteredWards.length} kết quả</span>
-              <span>Bấm vào để chọn</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ==================== MODAL / SHEET TÌM KIẾM PHƯỜNG / XÃ ==================== */}
+      <AddressSelectionModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        locations={locations}
+        selectedWard={selectedWard}
+        onSelectWard={(ward, district) => {
+          setSelectedWard(ward);
+          setSelectedDistrict(district);
+          setSelectedBranchId("");
+        }}
+      />
 
       {/* ==================== MODAL / SHEET ĐỔI CHI NHÁNH PHỤC VỤ ==================== */}
-      {isBranchModalOpen && currentWardInfo && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div
-            className="w-full max-w-md bg-card border border-border/80 shadow-2xl rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[85vh] sm:max-h-[75vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
-            role="dialog"
-            aria-modal="true"
-          >
-            {/* Thanh kéo vuốt trên mobile */}
-            <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto my-2.5 shrink-0 sm:hidden" />
-
-            {/* Header Sheet */}
-            <div className="p-4 border-b border-border/70 flex items-center justify-between gap-3 shrink-0">
-              <div className="space-y-0.5 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Store className="size-4 text-primary shrink-0" />
-                  <h3 className="font-bold text-base text-foreground truncate">
-                    Chọn Chi Nhánh Giao Hàng
-                  </h3>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  Giao tới: <strong className="text-foreground">{selectedWard}</strong>, {selectedDistrict || currentWardInfo.district}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsBranchModalOpen(false)}
-                className="size-8 rounded-full shrink-0"
-              >
-                <X className="size-4" />
-                <span className="sr-only">Đóng</span>
-              </Button>
-            </div>
-
-            {/* Danh sách chi nhánh phục vụ */}
-            <div className="flex-1 overflow-y-auto divide-y divide-border/40 p-3 space-y-2">
-              <p className="text-2xs text-muted-foreground px-1 pb-1">
-                Khu vực của bạn được hỗ trợ bởi {currentWardInfo.supportedBranches.length} chi nhánh. Bạn có thể chọn chi nhánh gần nhất để tối ưu thời gian và phí ship:
-              </p>
-              {currentWardInfo.supportedBranches.map((b) => {
-                const isSelected = (selectedBranchId || shippingCalc?.branch?.id) === b.id;
-                return (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedBranchId(b.id);
-                      setIsBranchModalOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3",
-                      isSelected
-                        ? "border-primary bg-primary/10 shadow-xs"
-                        : "border-border/70 hover:bg-muted/40 active:bg-muted/60"
-                    )}
-                  >
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className={cn(
-                            "text-sm font-semibold leading-tight",
-                            isSelected ? "text-primary font-bold" : "text-foreground"
-                          )}
-                        >
-                          {b.name}
-                        </span>
-                        {b.isDefault && (
-                          <Badge variant="secondary" className="text-3xs font-medium px-1.5 py-0 bg-primary/15 text-primary">
-                            Mặc định
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Truck className="size-3 text-primary shrink-0" />
-                        <span>Phí giao hàng:</span>
-                        <span className="font-mono font-bold text-foreground">{formatPrice(b.fee)}</span>
-                      </div>
-                    </div>
-
-                    <div className="shrink-0 flex items-center justify-center">
-                      <div
-                        className={cn(
-                          "size-5 rounded-full border flex items-center justify-center transition-all",
-                          isSelected
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-muted-foreground/40"
-                        )}
-                      >
-                        {isSelected && <Check className="size-3 stroke-[3]" />}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Footer Sheet */}
-            <div className="p-3 border-t border-border/60 shrink-0 bg-muted/20 flex items-center justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBranchModalOpen(false)}
-                className="h-8 rounded-lg text-xs"
-              >
-                Đóng
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BranchSelectionModal
+        isOpen={isBranchModalOpen}
+        onClose={() => setIsBranchModalOpen(false)}
+        currentWardInfo={currentWardInfo}
+        selectedWard={selectedWard}
+        selectedDistrict={selectedDistrict}
+        selectedBranchId={selectedBranchId}
+        defaultBranchId={shippingCalc?.branch?.id}
+        onSelectBranchId={(branchId) => setSelectedBranchId(branchId)}
+      />
     </div>
   );
 }

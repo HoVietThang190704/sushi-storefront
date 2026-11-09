@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Phone, MapPin, Clock } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { SITE_CONFIG } from "@/config/site.config";
 
 export function Footer() {
   const pathname = usePathname();
@@ -119,7 +120,12 @@ export function Footer() {
             <div className="space-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Phone className="size-4 shrink-0 text-primary" />
-                <span className="font-medium text-foreground">1900 8888</span>
+                <a
+                  href={`tel:${SITE_CONFIG.hotlineTel}`}
+                  className="font-medium text-foreground hover:text-primary transition-colors font-mono"
+                >
+                  {SITE_CONFIG.hotline}
+                </a>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="size-4 shrink-0 text-primary mt-0.5" />
