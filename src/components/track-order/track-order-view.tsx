@@ -23,6 +23,8 @@ import {
   FileText,
   History,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Truck,
   MapPin,
 } from "lucide-react";
@@ -43,12 +45,12 @@ interface RecentOrderLocal {
 }
 
 const ORDER_STEPS = [
-  { key: "PENDING", label: "Chờ tiếp nhận", desc: "Đơn hàng đã gửi tới hệ thống", icon: Clock },
-  { key: "CONFIRMED", label: "Đã xác nhận", desc: "Cửa hàng đã xác nhận đơn", icon: CheckCircle2 },
-  { key: "PREPARING", label: "Đang chế biến", desc: "Đầu bếp đang thực hiện", icon: ChefHat },
-  { key: "READY_FOR_PICKUP", label: "Chờ giao hàng", desc: "Món ăn đã đóng hộp giữ nhiệt", icon: Package },
-  { key: "DELIVERING", label: "Đang giao hàng", desc: "Shipper đang giao tới địa chỉ của bạn", icon: Truck },
-  { key: "COMPLETED", label: "Đã giao thành công", desc: "Đơn hàng đã hoàn tất", icon: CheckCircle2 },
+  { key: "PENDING", label: "Tiếp nhận", desc: "Chờ xác nhận đơn", icon: Clock },
+  { key: "CONFIRMED", label: "Đã nhận", desc: "Cửa hàng đã xác nhận", icon: CheckCircle2 },
+  { key: "PREPARING", label: "Chế biến", desc: "Bếp đang thực hiện", icon: ChefHat },
+  { key: "READY_FOR_PICKUP", label: "Đóng gói", desc: "Hộp giữ nhiệt sẵn sàng", icon: Package },
+  { key: "DELIVERING", label: "Giao hàng", desc: "Shipper đang giao tới", icon: Truck },
+  { key: "COMPLETED", label: "Hoàn tất", desc: "Đã giao thành công", icon: CheckCircle2 },
 ];
 
 function getStepIndex(status: string): number {
@@ -73,21 +75,21 @@ function getStepIndex(status: string): number {
 function getStatusBadge(status: string) {
   switch (status) {
     case "PENDING":
-      return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30">Chờ tiếp nhận</Badge>;
+      return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 whitespace-nowrap">Chờ tiếp nhận</Badge>;
     case "CONFIRMED":
-      return <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30">Đã xác nhận</Badge>;
+      return <Badge variant="outline" className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 whitespace-nowrap">Đã xác nhận</Badge>;
     case "PREPARING":
-      return <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30">Đang chế biến</Badge>;
+      return <Badge variant="outline" className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30 whitespace-nowrap">Đang chế biến</Badge>;
     case "READY_FOR_PICKUP":
-      return <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30">Chờ giao hàng</Badge>;
+      return <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30 whitespace-nowrap">Chờ giao hàng</Badge>;
     case "DELIVERING":
-      return <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30">Đang giao hàng</Badge>;
+      return <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 whitespace-nowrap">Đang giao hàng</Badge>;
     case "COMPLETED":
-      return <Badge variant="outline" className="bg-emerald-600 text-white border-transparent">Đã giao thành công</Badge>;
+      return <Badge variant="outline" className="bg-emerald-600 text-white border-transparent whitespace-nowrap">Đã giao thành công</Badge>;
     case "CANCELLED":
-      return <Badge variant="outline" className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30">Đã hủy</Badge>;
+      return <Badge variant="outline" className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 whitespace-nowrap">Đã hủy</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <Badge variant="outline" className="whitespace-nowrap">{status}</Badge>;
   }
 }
 
@@ -121,6 +123,7 @@ export function TrackOrderView() {
   const [loading, setLoading] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const [showSearchForm, setShowSearchForm] = React.useState(false);
 
   const storedRecent = React.useSyncExternalStore(
     subscribeToStorage,
@@ -185,6 +188,7 @@ export function TrackOrderView() {
       try {
         const data = await trackOrder(cleanCode, token || undefined, phone || undefined);
         setOrder(data);
+        setShowSearchForm(false);
         if (token) {
           setActiveToken(token);
         }
@@ -230,6 +234,7 @@ export function TrackOrderView() {
         const data = await trackOrder(queryCode.trim(), token, queryPhone?.trim());
         if (active) {
           setOrder(data);
+          setShowSearchForm(false);
           setInputCode(data.code);
           if (data.customerPhone) {
             setInputPhone(data.customerPhone);
@@ -357,7 +362,7 @@ export function TrackOrderView() {
   const isCancelled = order?.status === "CANCELLED";
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-32 sm:pb-24">
       {/* ==================== BREADCRUMB ==================== */}
       <div className="hidden sm:block border-b border-border/70 bg-muted/20 py-4">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 flex items-center gap-2 text-xs text-muted-foreground">
@@ -369,14 +374,16 @@ export function TrackOrderView() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-6 sm:pt-12">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 pt-5 sm:pt-10">
         {/* ==================== HEADER ==================== */}
-        <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground tracking-tight">
+        <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground tracking-tight">
             Theo Dõi Đơn Hàng
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Nhập mã đơn hàng và số điện thoại để kiểm tra tiến độ chế biến món ăn tại Hanbi Sushi.
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {order
+              ? "Cập nhật tiến độ chế biến và giao món trực tiếp từ Hanbi Sushi."
+              : "Nhập mã đơn hàng và số điện thoại để kiểm tra tiến độ món ăn."}
           </p>
         </div>
 
@@ -415,87 +422,116 @@ export function TrackOrderView() {
           </div>
         )}
 
-        {/* ==================== SEARCH FORM ==================== */}
-        <div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm max-w-2xl mx-auto mb-10">
-          <form onSubmit={handleSearchSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="orderCode" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">
-                Mã đơn hàng <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="orderCode"
-                placeholder="Ví dụ: ORD-20261105-0001"
-                value={inputCode}
-                onChange={(e) => setInputCode(e.target.value)}
-                className="h-11 font-mono uppercase"
-                required
-              />
+        {/* ==================== THANH ĐIỀU HƯỚNG TRA CỨU ĐƠN KHÁC (KHI ĐANG XEM ĐƠN) ==================== */}
+        {order && (
+          <div className="max-w-2xl mx-auto mb-4 p-3 rounded-2xl border border-border/80 bg-card flex items-center justify-between text-xs shadow-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-muted-foreground truncate text-2xs sm:text-xs">
+                Đang xem đơn: <strong className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{order.code}</strong>
+              </span>
             </div>
-
-            <div>
-              <Label htmlFor="customerPhone" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">
-                Số điện thoại đặt món <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="customerPhone"
-                type="tel"
-                placeholder="Ví dụ: 0901234567"
-                value={inputPhone}
-                onChange={(e) => setInputPhone(e.target.value)}
-                className="h-11"
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Nhập số điện thoại bạn đã điền lúc đặt món để hệ thống xác thực.
-              </p>
-            </div>
-
             <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 rounded-xl text-sm font-semibold gap-2 shadow-sm"
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSearchForm(!showSearchForm)}
+              className="h-8 px-2.5 rounded-xl text-2xs sm:text-xs font-semibold gap-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 shrink-0"
             >
-              {loading ? (
-                <>
-                  <RefreshCw className="size-4 animate-spin" />
-                  <span>Đang tìm kiếm...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="size-4" />
-                  <span>Tra cứu tiến độ</span>
-                </>
-              )}
+              <Search className="size-3.5" />
+              <span>{showSearchForm ? "Thu gọn form" : "Tra cứu đơn khác"}</span>
+              {showSearchForm ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
             </Button>
-          </form>
-        </div>
+          </div>
+        )}
+
+        {/* ==================== SEARCH FORM ==================== */}
+        {(!order || showSearchForm) && (
+          <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-7 shadow-xs max-w-2xl mx-auto mb-8 animate-in fade-in-50 duration-200">
+            <form onSubmit={handleSearchSubmit} className="space-y-3.5 sm:space-y-4">
+              <div>
+                <Label htmlFor="orderCode" className="text-2xs sm:text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                  Mã đơn hàng <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="orderCode"
+                  placeholder="Ví dụ: ORD-20261105-0001"
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value)}
+                  className="h-10.5 sm:h-11 font-mono uppercase rounded-xl"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="customerPhone" className="text-2xs sm:text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                  Số điện thoại đặt món <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  placeholder="Ví dụ: 0901234567"
+                  value={inputPhone}
+                  onChange={(e) => setInputPhone(e.target.value)}
+                  className="h-10.5 sm:h-11 rounded-xl"
+                />
+                <p className="text-2xs text-muted-foreground mt-1">
+                  Nhập số điện thoại bạn đã điền lúc đặt món để hệ thống xác thực.
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 rounded-xl text-xs sm:text-sm font-bold gap-2 shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="size-4 animate-spin" />
+                    <span>Đang tìm kiếm...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="size-4" />
+                    <span>Tra cứu tiến độ</span>
+                  </>
+                )}
+              </Button>
+            </form>
+          </div>
+        )}
 
         {/* ==================== KẾT QUẢ ĐƠN HÀNG ==================== */}
         {order && (
-          <div className="space-y-8 animate-in fade-in-50 duration-300">
+          <div className="space-y-6 sm:space-y-8 animate-in fade-in-50 duration-300">
             {/* THÔNG TIN CHUNG CỦA ĐƠN */}
-            <div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border/80">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl sm:text-2xl font-bold font-mono text-primary">
-                      {order.code}
-                    </span>
-                    <button
-                      onClick={() => handleCopyCode(order.code)}
-                      className="p-1.5 rounded-lg border border-border/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                      title="Sao chép mã đơn"
-                    >
-                      {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-                    </button>
+            <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-7 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-border/80">
+                <div className="space-y-1.5 min-w-0">
+                  <div className="flex items-center justify-between sm:justify-start gap-2.5 flex-wrap">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg sm:text-2xl font-black font-mono tracking-wider text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                        {order.code}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCode(order.code)}
+                        className="p-1.5 rounded-lg border border-border/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        title="Sao chép mã đơn"
+                      >
+                        {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+                      </button>
+                    </div>
                     {getStatusBadge(order.status)}
                   </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <Calendar className="size-3.5" />
-                    Đặt lúc: {new Date(order.createdAt).toLocaleString("vi-VN")}
+
+                  <p className="text-2xs sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Calendar className="size-3.5 shrink-0" />
+                    <span>Đặt lúc: {new Date(order.createdAt).toLocaleString("vi-VN")}</span>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 self-start md:self-auto">
+                <div className="flex items-center gap-2 pt-1 sm:pt-0 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
@@ -508,7 +544,7 @@ export function TrackOrderView() {
                         true
                       )
                     }
-                    className="gap-1.5 rounded-xl text-xs h-9"
+                    className="gap-1.5 rounded-xl text-xs h-9 bg-secondary/30 hover:bg-secondary/60"
                   >
                     <RefreshCw className={cn("size-3.5", refreshing && "animate-spin")} />
                     <span>Làm mới</span>
@@ -522,14 +558,14 @@ export function TrackOrderView() {
                       className="gap-1.5 rounded-xl text-xs h-9"
                     >
                       <XCircle className="size-3.5" />
-                      <span>Hủy đơn hàng</span>
+                      <span>Hủy đơn</span>
                     </Button>
                   )}
                 </div>
               </div>
 
               {/* TIMELINE TIẾN ĐỘ */}
-              <div className="pt-8 pb-4">
+              <div className="pt-6 sm:pt-8 pb-3">
                 {isCancelled ? (
                   <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
                     <XCircle className="size-5 text-destructive shrink-0 mt-0.5" />
@@ -542,12 +578,12 @@ export function TrackOrderView() {
                   </div>
                 ) : (
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-6">
+                    <h3 className="text-2xs sm:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-5 sm:mb-6">
                       Tiến độ thực hiện món ăn
                     </h3>
 
-                    {/* Desktop Step Bar */}
-                    <div className="hidden sm:grid grid-cols-5 gap-3 text-center relative">
+                    {/* Desktop Step Bar (6 CỘT CHUẨN) */}
+                    <div className="hidden sm:grid grid-cols-6 gap-2 text-center relative">
                       {ORDER_STEPS.map((step, idx) => {
                         const isDone = currentStep >= idx;
                         const isCurrent = currentStep === idx;
@@ -557,19 +593,19 @@ export function TrackOrderView() {
                           <div key={step.key} className="space-y-2">
                             <div
                               className={cn(
-                                "size-11 rounded-full flex items-center justify-center mx-auto transition-all duration-300",
-                                isCurrent && "bg-primary text-primary-foreground ring-4 ring-primary/20 scale-110",
+                                "size-10 rounded-full flex items-center justify-center mx-auto transition-all duration-300",
+                                isCurrent && "bg-emerald-600 text-white ring-4 ring-emerald-600/25 scale-105 shadow-md",
                                 isDone && !isCurrent && "bg-emerald-600 text-white",
                                 !isDone && "bg-muted text-muted-foreground border border-border"
                               )}
                             >
-                              <Icon className="size-5" />
+                              <Icon className="size-4.5" />
                             </div>
                             <div>
                               <span
                                 className={cn(
-                                  "text-xs font-semibold block",
-                                  isCurrent ? "text-primary" : isDone ? "text-foreground" : "text-muted-foreground"
+                                  "text-xs font-semibold block leading-tight",
+                                  isCurrent ? "text-emerald-600 dark:text-emerald-400 font-bold" : isDone ? "text-foreground" : "text-muted-foreground"
                                 )}
                               >
                                 {step.label}
@@ -583,35 +619,43 @@ export function TrackOrderView() {
                       })}
                     </div>
 
-                    {/* Mobile Step List */}
-                    <div className="sm:hidden space-y-4">
+                    {/* Mobile Step List (CÓ LINE CONNECTOR ĐỒNG BỘ EMERALD) */}
+                    <div className="sm:hidden space-y-3.5">
                       {ORDER_STEPS.map((step, idx) => {
                         const isDone = currentStep >= idx;
                         const isCurrent = currentStep === idx;
                         const Icon = step.icon;
 
                         return (
-                          <div key={step.key} className="flex items-start gap-3">
+                          <div key={step.key} className="flex items-start gap-3 relative">
+                            {idx < ORDER_STEPS.length - 1 && (
+                              <div
+                                className={cn(
+                                  "absolute left-4 top-8 w-0.5 h-6 -ml-[1px]",
+                                  currentStep > idx ? "bg-emerald-500" : "bg-border"
+                                )}
+                              />
+                            )}
                             <div
                               className={cn(
-                                "size-8 rounded-full flex items-center justify-center shrink-0 mt-0.5",
-                                isCurrent && "bg-primary text-primary-foreground ring-2 ring-primary/20",
+                                "size-8 rounded-full flex items-center justify-center shrink-0 z-10 transition-colors",
+                                isCurrent && "bg-emerald-600 text-white ring-4 ring-emerald-600/20 shadow-sm",
                                 isDone && !isCurrent && "bg-emerald-600 text-white",
                                 !isDone && "bg-muted text-muted-foreground border border-border"
                               )}
                             >
                               <Icon className="size-4" />
                             </div>
-                            <div className="space-y-0.5">
+                            <div className="space-y-0.5 pt-0.5 min-w-0">
                               <span
                                 className={cn(
-                                  "text-xs font-semibold block",
-                                  isCurrent ? "text-primary" : isDone ? "text-foreground" : "text-muted-foreground"
+                                  "text-xs font-bold block",
+                                  isCurrent ? "text-emerald-600 dark:text-emerald-400" : isDone ? "text-foreground" : "text-muted-foreground"
                                 )}
                               >
                                 {step.label}
                               </span>
-                              <span className="text-[11px] text-muted-foreground block">
+                              <span className="text-2xs text-muted-foreground block">
                                 {step.desc}
                               </span>
                             </div>
