@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { trackOrder, cancelGuestOrder, formatPrice, TrackOrderResponse } from "@/lib/api";
 import { SITE_CONFIG } from "@/config/site.config";
+import { BankTransferQrBox } from "@/components/payment/bank-transfer-qr-box";
 import { toast } from "sonner";
 import { io, Socket } from "socket.io-client";
 
@@ -684,6 +685,17 @@ export function TrackOrderView() {
               )}
             </div>
 
+            {/* KHỐI QUÉT MÃ QR NẾU ĐƠN LÀ CHUYỂN KHOẢN */}
+            {(order.paymentMethod === "VIETQR" || order.paymentMethod === "BANK_TRANSFER") && (
+              <BankTransferQrBox
+                orderCode={order.code}
+                totalAmount={order.totalAmount}
+                paymentQrUrl={order.paymentQrUrl}
+                paymentBankInfo={order.paymentBankInfo}
+                isPaid={order.paymentStatus === "PAID"}
+              />
+            )}
+
             {/* CHI TIẾT MÓN ĂN & THÔNG TIN KHÁCH */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {/* DANH SÁCH MÓN (2 CỘT) */}
@@ -786,7 +798,7 @@ export function TrackOrderView() {
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-3xs">
-                            Chờ thanh toán (COD)
+                            {order.paymentMethod === "VIETQR" ? "Chờ chuyển khoản" : "Chờ thanh toán (COD)"}
                           </Badge>
                         )}
                       </div>

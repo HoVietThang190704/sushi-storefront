@@ -32,6 +32,8 @@ import {
   createOrder,
   calculateShippingFee,
   type ShippingCalculationResult,
+  fetchPaymentConfig,
+  type StorePaymentConfig,
 } from "@/lib/api";
 import { useShippingLocations } from "@/hooks/use-queries";
 import { PAYMENT_CONFIG, VIETNAM_PHONE_REGEX } from "@/config/site.config";
@@ -67,7 +69,14 @@ export function CheckoutView() {
   const [selectedBranchId, setSelectedBranchId] = React.useState<string>("");
   const [note, setNote] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState<"CASH" | "VIETQR">("CASH");
+  const [paymentConfig, setPaymentConfig] = React.useState<StorePaymentConfig | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    fetchPaymentConfig().then((cfg) => {
+      if (cfg) setPaymentConfig(cfg);
+    });
+  }, []);
 
   // Modal / Sheet tìm kiếm Phường/Xã (Tên mới & Tên cũ)
   const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
@@ -869,37 +878,51 @@ export function CheckoutView() {
                     <div className="p-4 rounded-xl bg-muted/40 border border-border/80 space-y-3">
                       <div className="flex items-center gap-2 text-xs font-semibold text-primary">
                         <QrCode className="size-4" />
-                        <span>Thông tin tài khoản nhận chuyển khoản:</span>
+                        <span>Thông tin tài khoản nhận chuyển khoản của quán:</span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground bg-card p-3 rounded-lg border border-border/60">
-                        <div>
-                          <span>Ngân hàng:</span>
-                          <p className="font-semibold text-foreground">
-                            {PAYMENT_CONFIG.vietqr.bankName}
-                          </p>
-                        </div>
-                        <div>
-                          <span>Chủ tài khoản:</span>
-                          <p className="font-semibold text-foreground">
-                            {PAYMENT_CONFIG.vietqr.accountHolder}
-                          </p>
-                        </div>
-                        <div>
-                          <span>Số tài khoản:</span>
-                          <p className="font-mono font-bold text-primary text-sm sm:text-xs">
-                            {PAYMENT_CONFIG.vietqr.accountNumber}
-                          </p>
-                        </div>
-                        <div>
-                          <span>Số tiền thanh toán:</span>
-                          <p className="font-mono font-bold text-foreground text-sm sm:text-xs">
-                            {formatPrice(calculatedTotal)}
-                          </p>
+                      <div className="flex flex-col sm:flex-row gap-3 items-center bg-card p-3 rounded-lg border border-border/60">
+                        {paymentConfig?.qrImageUrl && (
+                          <div className="size-24 rounded-lg overflow-hidden border bg-white p-1 shrink-0 flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={paymentConfig.qrImageUrl}
+                              alt="Mã QR"
+                              className="size-full object-contain"
+                            />
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground flex-1 w-full">
+                          <div>
+                            <span>Ngân hàng:</span>
+                            <p className="font-semibold text-foreground">
+                              {paymentConfig?.bankName || PAYMENT_CONFIG.vietqr.bankName}
+                            </p>
+                          </div>
+                          <div>
+                            <span>Chủ tài khoản:</span>
+                            <p className="font-semibold text-foreground uppercase">
+                              {paymentConfig?.accountHolder || PAYMENT_CONFIG.vietqr.accountHolder}
+                            </p>
+                          </div>
+                          <div>
+                            <span>Số tài khoản:</span>
+                            <p className="font-mono font-bold text-primary text-sm sm:text-xs">
+                              {paymentConfig?.accountNumber || PAYMENT_CONFIG.vietqr.accountNumber}
+                            </p>
+                          </div>
+                          <div>
+                            <span>Số tiền thanh toán:</span>
+                            <p className="font-mono font-bold text-foreground text-sm sm:text-xs">
+                              {formatPrice(calculatedTotal)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground italic">
-                        * Sau khi xác nhận đặt hàng, hệ thống sẽ hiển thị mã QR động để bạn quét nhanh bằng ứng dụng ngân hàng.
+
+                      <p className="text-[11px] text-muted-foreground italic leading-relaxed">
+                        * Sau khi xác nhận đặt hàng, màn hình sẽ hiển thị mã QR kích thước đầy đủ cùng nội dung chuyển khoản theo mã đơn để bạn quét nhanh bằng ứng dụng ngân hàng.
                       </p>
                     </div>
                   )}

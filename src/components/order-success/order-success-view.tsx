@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useTrackOrder } from "@/hooks/use-queries";
 import { formatPrice } from "@/lib/api";
 import { SITE_CONFIG } from "@/config/site.config";
+import { BankTransferQrBox } from "@/components/payment/bank-transfer-qr-box";
 import { io, Socket } from "socket.io-client";
 
 function getDeliveryStep(status?: string): number {
@@ -348,6 +349,17 @@ export function OrderSuccessView() {
               </div>
             )}
           </div>
+
+          {/* KHỐI QUÉT MÃ QR NẾU ĐƠN LÀ CHUYỂN KHOẢN */}
+          {order && (order.paymentMethod === "VIETQR" || order.paymentMethod === "BANK_TRANSFER") && (
+            <BankTransferQrBox
+              orderCode={order.code}
+              totalAmount={order.totalAmount}
+              paymentQrUrl={order.paymentQrUrl}
+              paymentBankInfo={order.paymentBankInfo}
+              isPaid={order.paymentStatus === "PAID"}
+            />
+          )}
 
           {/* 3. CARD TÓM TẮT ĐƠN HÀNG (MINI RECEIPT - GIÚP KHÁCH YÊN TÂM VỀ ĐƠN VỪA ĐẶT) */}
           {order && (

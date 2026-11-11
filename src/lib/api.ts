@@ -189,6 +189,9 @@ export interface CreatedOrderResponse {
     totalAmount: string | number;
     status: string;
     paymentStatus: string;
+    paymentMethod?: string;
+    paymentQrUrl?: string | null;
+    paymentBankInfo?: string | null;
     createdAt: string;
     items?: Array<{
       id: string;
@@ -235,6 +238,8 @@ export interface TrackOrderResponse {
   status: string;
   paymentStatus: string;
   paymentMethod: string;
+  paymentQrUrl?: string | null;
+  paymentBankInfo?: string | null;
   shippingFee?: string | number;
   totalAmount: string | number;
   createdAt: string;
@@ -298,4 +303,28 @@ export async function cancelGuestOrder(
     throw new Error(json.message || "Không thể hủy đơn hàng.");
   }
   return { success: true };
+}
+
+export interface StorePaymentConfig {
+  bankName?: string | null;
+  accountNumber?: string | null;
+  accountHolder?: string | null;
+  qrImageUrl?: string | null;
+  transferSyntax?: string | null;
+  note?: string | null;
+  isActive: boolean;
+}
+
+export async function fetchPaymentConfig(): Promise<StorePaymentConfig | null> {
+  try {
+    const baseUrl = getBaseUrl();
+    const res = await fetch(`${baseUrl}/api/orders/payment-config`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json: ApiResponse<StorePaymentConfig> = await res.json();
+    return json.data || null;
+  } catch {
+    return null;
+  }
 }
