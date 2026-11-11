@@ -74,22 +74,22 @@ export function BankTransferQrBox({
   return (
     <div className={`p-4 sm:p-5 rounded-2xl bg-card border border-primary/30 shadow-md space-y-4 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-border/70">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/70">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <QrCode className="size-4.5" />
           </div>
-          <div>
-            <h4 className="font-bold text-sm text-foreground">
+          <div className="min-w-0">
+            <h4 className="font-bold text-sm text-foreground truncate">
               Quét Mã QR Chuyển Khoản
             </h4>
-            <p className="text-2xs text-muted-foreground">
-              Mở ứng dụng ngân hàng hoặc ví điện tử để quét mã
+            <p className="text-2xs text-muted-foreground truncate">
+              Mở ứng dụng ngân hàng để quét mã
             </p>
           </div>
         </div>
 
-        <span className="px-2.5 py-1 rounded-full text-2xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+        <span className="shrink-0 whitespace-nowrap px-2.5 py-1 rounded-full text-2xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
           Chờ thanh toán
         </span>
       </div>
