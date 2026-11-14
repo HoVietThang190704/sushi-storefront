@@ -38,12 +38,13 @@ import {
 import { useShippingLocations } from "@/hooks/use-queries";
 import { PAYMENT_CONFIG, VIETNAM_PHONE_REGEX } from "@/config/site.config";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { AddressSelectionModal } from "@/components/checkout/address-selection-modal";
 import { BranchSelectionModal } from "@/components/checkout/branch-selection-modal";
 
@@ -55,6 +56,8 @@ export function CheckoutView() {
     () => false
   );
   const { items, clearCart, totalPrice } = useCartStore();
+  const { customerOrderingEnabled, contactPhone, contactPhoneTel } =
+    useStoreConfig();
 
   const [step, setStep] = React.useState<1 | 2>(1);
   const [showMobileSummary, setShowMobileSummary] = React.useState(false);
@@ -151,6 +154,39 @@ export function CheckoutView() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!customerOrderingEnabled) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center max-w-md mx-auto">
+        <div className="size-16 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 border border-amber-500/20">
+          <Phone className="size-8" />
+        </div>
+        <h2 className="text-xl font-bold font-serif text-foreground">
+          Tạm ngưng đặt món trực tuyến
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+          Cửa hàng hiện đang tạm ngưng nhận đơn hàng trực tuyến qua website. Quý khách vui lòng gọi hotline bên dưới để nhân viên phục vụ đặt món giao tận nơi!
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 w-full">
+          <a
+            href={`tel:${contactPhoneTel}`}
+            className={cn(
+              buttonVariants({ variant: "default", size: "lg" }),
+              "w-full rounded-xl font-semibold gap-2 bg-primary text-primary-foreground"
+            )}
+          >
+            <Phone className="size-4" />
+            <span>Gọi hotline: {contactPhone}</span>
+          </a>
+          <Link href="/menu" className="w-full sm:w-auto">
+            <Button variant="outline" size="lg" className="w-full rounded-xl">
+              Xem thực đơn
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

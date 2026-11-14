@@ -30,6 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCartStore } from "@/lib/cart-store";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,9 @@ export function Header() {
     () => true,
     () => false
   );
+
+  const { customerOrderingEnabled, contactPhone, contactPhoneTel } =
+    useStoreConfig();
 
   const totalItems = useCartStore((state) => state.totalItems());
 
@@ -187,26 +191,38 @@ export function Header() {
           {/* Nút chuyển đổi màu (Theme Toggle: Sun / Moon vector icon - ẩn trên mobile nhỏ vì đã có trong drawer menu) */}
           <ThemeToggle className="hidden sm:inline-flex size-9" />
 
-          {/* Logo giỏ hàng */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative size-9"
-            asChild
-            title="Giỏ hàng của bạn"
-          >
-            <Link href="/cart" aria-label="Giỏ hàng">
-              <ShoppingBag className="size-5" />
-              {isMounted && totalItems > 0 && (
-                <Badge
-                  variant="default"
-                  className="absolute -top-1 -right-1 flex size-4 sm:size-5 items-center justify-center rounded-full p-0 text-[10px] font-bold"
-                >
-                  {totalItems > 99 ? "99+" : totalItems}
-                </Badge>
-              )}
-            </Link>
-          </Button>
+          {/* Logo giỏ hàng (khi bật đặt món) HOẶC Nút gọi điện hotline (khi tắt đặt món) */}
+          {customerOrderingEnabled ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative size-9"
+              asChild
+              title="Giỏ hàng của bạn"
+            >
+              <Link href="/cart" aria-label="Giỏ hàng">
+                <ShoppingBag className="size-5" />
+                {isMounted && totalItems > 0 && (
+                  <Badge
+                    variant="default"
+                    className="absolute -top-1 -right-1 flex size-4 sm:size-5 items-center justify-center rounded-full p-0 text-[10px] font-bold"
+                  >
+                    {totalItems > 99 ? "99+" : totalItems}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
+          ) : (
+            <a
+              href={`tel:${contactPhoneTel}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold transition-colors"
+              title={`Hotline đặt món: ${contactPhone}`}
+            >
+              <Phone className="size-3.5" />
+              <span className="hidden sm:inline">Hotline: {contactPhone}</span>
+              <span className="sm:hidden">Gọi món</span>
+            </a>
+          )}
 
           {/* Menu Dropdown Tài khoản & Đơn mua kiểu Shopee (Desktop) */}
           <div className="hidden sm:inline-flex">

@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UtensilsCrossed, Package, ShoppingBag } from "lucide-react";
+import { Home, UtensilsCrossed, Package, ShoppingBag, Phone } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
 
@@ -15,16 +16,10 @@ interface NavTab {
   badge?: boolean;
 }
 
-const TABS: NavTab[] = [
-  { label: "Trang chủ", href: "/", icon: Home },
-  { label: "Thực đơn", href: "/menu", icon: UtensilsCrossed },
-  { label: "Đơn mua", href: "/track-order", icon: Package },
-  { label: "Giỏ hàng", href: "/cart", icon: ShoppingBag, badge: true },
-];
-
 export function BottomNav() {
   const pathname = usePathname();
   const isVisible = useScrollDirection({ threshold: 12 });
+  const { customerOrderingEnabled, contactPhoneTel } = useStoreConfig();
 
   // Tránh hydration mismatch bằng useSyncExternalStore
   const isMounted = React.useSyncExternalStore(
@@ -34,6 +29,18 @@ export function BottomNav() {
   );
 
   const totalItems = useCartStore((state) => state.totalItems());
+
+  const tabs: NavTab[] = React.useMemo(
+    () => [
+      { label: "Trang chủ", href: "/", icon: Home },
+      { label: "Thực đơn", href: "/menu", icon: UtensilsCrossed },
+      { label: "Đơn mua", href: "/track-order", icon: Package },
+      customerOrderingEnabled
+        ? { label: "Giỏ hàng", href: "/cart", icon: ShoppingBag, badge: true }
+        : { label: "Gọi món", href: `tel:${contactPhoneTel}`, icon: Phone },
+    ],
+    [customerOrderingEnabled, contactPhoneTel]
+  );
 
   // Ẩn thanh BottomNav trên các màn hình thanh toán, chi tiết món hoặc giỏ hàng có món
   // để nhường không gian cho các nút CTA hành động quan trọng (Thanh toán / Thêm vào giỏ)
@@ -62,7 +69,7 @@ export function BottomNav() {
       )}
     >
       <div className="grid grid-cols-4 items-center max-w-md mx-auto">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive =
             tab.href === "/"

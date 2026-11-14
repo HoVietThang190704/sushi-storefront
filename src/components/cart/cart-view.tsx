@@ -13,8 +13,11 @@ import {
   ArrowRight,
   UtensilsCrossed,
   PackageCheck,
+  Phone,
+  AlertCircle,
 } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { formatPrice } from "@/lib/api";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -27,6 +30,8 @@ export function CartView() {
     () => true,
     () => false
   );
+  const { customerOrderingEnabled, contactPhone, contactPhoneTel } =
+    useStoreConfig();
   const { items, updateQuantity, removeItem, clearCart, totalPrice } =
     useCartStore();
 
@@ -145,7 +150,26 @@ export function CartView() {
           </div>
         ) : (
           /* DANH SÁCH MÓN & TỔNG KẾT */
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          <div className="mt-8 space-y-6">
+            {!customerOrderingEnabled && (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-800 dark:text-amber-300">
+                <div className="flex items-start sm:items-center gap-3">
+                  <AlertCircle className="size-5 shrink-0 mt-0.5 sm:mt-0 text-amber-600 dark:text-amber-400" />
+                  <div className="text-xs sm:text-sm">
+                    <strong>Website hiện đang tạm ngưng nhận đặt món trực tuyến.</strong> Quý khách vui lòng bấm nút gọi hotline để nhân viên hỗ trợ giao tận nơi!
+                  </div>
+                </div>
+                <a
+                  href={`tel:${contactPhoneTel}`}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0 transition-colors shadow-sm"
+                >
+                  <Phone className="size-4" />
+                  <span>Gọi {contactPhone}</span>
+                </a>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
             {/* CỘT TRÁI: DANH SÁCH MÓN ĂN */}
             <div className="lg:col-span-8 space-y-4">
               <div className="rounded-2xl border border-border/70 bg-card divide-y divide-border/50 overflow-hidden shadow-xs">
@@ -343,16 +367,29 @@ export function CartView() {
                 </div>
 
                 <div className="hidden sm:block space-y-2 pt-2">
-                  <Link
-                    href="/checkout"
-                    className={cn(
-                      buttonVariants({ variant: "default", size: "lg" }),
-                      "w-full h-12 rounded-xl text-base font-semibold gap-2 shadow-md hover:shadow-lg transition-all"
-                    )}
-                  >
-                    <span>Tiến hành Giao hàng</span>
-                    <ArrowRight className="size-4" />
-                  </Link>
+                  {customerOrderingEnabled ? (
+                    <Link
+                      href="/checkout"
+                      className={cn(
+                        buttonVariants({ variant: "default", size: "lg" }),
+                        "w-full h-12 rounded-xl text-base font-semibold gap-2 shadow-md hover:shadow-lg transition-all"
+                      )}
+                    >
+                      <span>Tiến hành Giao hàng</span>
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  ) : (
+                    <a
+                      href={`tel:${contactPhoneTel}`}
+                      className={cn(
+                        buttonVariants({ variant: "default", size: "lg" }),
+                        "w-full h-12 rounded-xl text-base font-semibold gap-2 shadow-md hover:shadow-lg transition-all bg-amber-600 hover:bg-amber-700 text-white"
+                      )}
+                    >
+                      <Phone className="size-4" />
+                      <span>Gọi đặt đơn này ({contactPhone})</span>
+                    </a>
+                  )}
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-muted/30 border border-border/50 text-xs text-muted-foreground space-y-1.5">
@@ -367,8 +404,9 @@ export function CartView() {
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
 
       {/* ==================== STICKY BOTTOM BAR (MOBILE THUMB ZONE) ==================== */}
       {!isEmpty && (
@@ -383,16 +421,29 @@ export function CartView() {
               </span>
             </div>
 
-            <Link
-              href="/checkout"
-              className={cn(
-                buttonVariants({ variant: "default", size: "default" }),
-                "h-11 px-5 rounded-xl font-semibold gap-1.5 shadow-md shrink-0 text-sm active:scale-95 transition-transform"
-              )}
-            >
-              <span>Thanh toán</span>
-              <ArrowRight className="size-4" />
-            </Link>
+            {customerOrderingEnabled ? (
+              <Link
+                href="/checkout"
+                className={cn(
+                  buttonVariants({ variant: "default", size: "default" }),
+                  "h-11 px-5 rounded-xl font-semibold gap-1.5 shadow-md shrink-0 text-sm active:scale-95 transition-transform"
+                )}
+              >
+                <span>Thanh toán</span>
+                <ArrowRight className="size-4" />
+              </Link>
+            ) : (
+              <a
+                href={`tel:${contactPhoneTel}`}
+                className={cn(
+                  buttonVariants({ variant: "default", size: "default" }),
+                  "h-11 px-4 rounded-xl font-semibold gap-1.5 shadow-md shrink-0 text-xs active:scale-95 transition-transform bg-amber-600 hover:bg-amber-700 text-white"
+                )}
+              >
+                <Phone className="size-4" />
+                <span>Gọi đặt món</span>
+              </a>
+            )}
           </div>
         </div>
       )}

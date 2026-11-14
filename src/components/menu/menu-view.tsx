@@ -24,7 +24,9 @@ import {
   Home as HomeIcon,
   X,
   SlidersHorizontal,
+  Phone,
 } from "lucide-react";
+import { useStoreConfig } from "@/hooks/use-store-config";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -52,6 +54,9 @@ export function MenuView() {
 
   const isLoading = loadingCategories || loadingProducts;
   const error = catError || prodError ? "Không thể kết nối đến máy chủ" : null;
+
+  const { customerOrderingEnabled, contactPhone, contactPhoneTel } =
+    useStoreConfig();
 
   const [internalCategoryId, setInternalCategoryId] = React.useState<string | null | undefined>(undefined);
   const [internalSearchQuery, setInternalSearchQuery] = React.useState<string | null>(null);
@@ -478,26 +483,43 @@ export function MenuView() {
                         </span>
                       </div>
 
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCart(product)}
-                        className="h-8 sm:h-9.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-semibold gap-1 shrink-0 transition-all shadow-xs hover:shadow-md active:scale-95"
-                        variant={isAdded ? "outline" : "default"}
-                        aria-label={`Thêm ${product.name} vào giỏ hàng`}
-                      >
-                        {isAdded ? (
-                          <>
-                            <Check className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
-                            <span className="text-[11px] sm:text-xs">Đã thêm</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="size-3.5 sm:size-4 stroke-[2.5]" />
-                            <span className="text-[11px] sm:text-xs">Chọn</span>
-                            <span className="hidden sm:inline text-xs">món</span>
-                          </>
-                        )}
-                      </Button>
+                      {customerOrderingEnabled ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddToCart(product)}
+                          className="h-8 sm:h-9.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-semibold gap-1 shrink-0 transition-all shadow-xs hover:shadow-md active:scale-95"
+                          variant={isAdded ? "outline" : "default"}
+                          aria-label={`Thêm ${product.name} vào giỏ hàng`}
+                        >
+                          {isAdded ? (
+                            <>
+                              <Check className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                              <span className="text-[11px] sm:text-xs">Đã thêm</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="size-3.5 sm:size-4 stroke-[2.5]" />
+                              <span className="text-[11px] sm:text-xs">Chọn</span>
+                              <span className="hidden sm:inline text-xs">món</span>
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          asChild
+                          className="h-8 sm:h-9.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-semibold gap-1 shrink-0 border-primary/40 text-primary hover:bg-primary/10"
+                        >
+                          <a
+                            href={`tel:${contactPhoneTel}`}
+                            title={`Gọi đặt ${product.name}: ${contactPhone}`}
+                          >
+                            <Phone className="size-3.5 stroke-[2.5]" />
+                            <span className="text-[11px] sm:text-xs">Gọi đặt</span>
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -13,7 +13,9 @@ import {
   Utensils,
   Check,
   Layers,
+  Phone,
 } from "lucide-react";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Product, formatPrice } from "@/lib/api";
 import { useCartStore } from "@/lib/cart-store";
@@ -33,6 +35,8 @@ export function ProductDetailView({
 }: ProductDetailViewProps) {
   const [quantity, setQuantity] = React.useState(1);
   const [isAdded, setIsAdded] = React.useState(false);
+  const { customerOrderingEnabled, contactPhone, contactPhoneTel } =
+    useStoreConfig();
   const addItem = useCartStore((state) => state.addItem);
 
   const priceNum =
@@ -240,61 +244,92 @@ export function ProductDetailView({
 
               {/* Bộ chọn số lượng & Nút Thêm vào giỏ (Hiển thị trên Desktop) */}
               <div className="hidden lg:block pt-4 border-t border-border/70 space-y-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-foreground">Số lượng:</span>
-                  <div className="inline-flex items-center rounded-xl border border-border bg-card shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => handleQuantityChange(-1)}
-                      disabled={quantity <= 1}
-                      className="size-10 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      aria-label="Giảm số lượng"
-                    >
-                      <Minus className="size-4" />
-                    </button>
-                    <span className="w-12 text-center text-sm font-bold font-mono text-foreground">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleQuantityChange(1)}
-                      disabled={quantity >= 99}
-                      className="size-10 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      aria-label="Tăng số lượng"
-                    >
-                      <Plus className="size-4" />
-                    </button>
-                  </div>
-                </div>
+                {customerOrderingEnabled ? (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium text-foreground">Số lượng:</span>
+                      <div className="inline-flex items-center rounded-xl border border-border bg-card shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => handleQuantityChange(-1)}
+                          disabled={quantity <= 1}
+                          className="size-10 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          aria-label="Giảm số lượng"
+                        >
+                          <Minus className="size-4" />
+                        </button>
+                        <span className="w-12 text-center text-sm font-bold font-mono text-foreground">
+                          {quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleQuantityChange(1)}
+                          disabled={quantity >= 99}
+                          className="size-10 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          aria-label="Tăng số lượng"
+                        >
+                          <Plus className="size-4" />
+                        </button>
+                      </div>
+                    </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <Button
-                    onClick={handleAddToCart}
-                    size="lg"
-                    className="flex-1 gap-2.5 h-12 sm:h-13 rounded-xl sm:rounded-2xl text-base font-semibold shadow-md hover:shadow-lg transition-all"
-                  >
-                    {isAdded ? (
-                      <>
-                        <Check className="size-5" />
-                        <span>Đã thêm vào giỏ!</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingBag className="size-5" />
-                        <span>Thêm vào giỏ hàng</span>
-                      </>
-                    )}
-                  </Button>
-                  <Link
-                    href="/menu"
-                    className={cn(
-                      buttonVariants({ variant: "outline", size: "lg" }),
-                      "w-full sm:w-auto h-12 sm:h-13 rounded-xl sm:rounded-2xl text-sm font-medium"
-                    )}
-                  >
-                    Xem tiếp thực đơn
-                  </Link>
-                </div>
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Button
+                        onClick={handleAddToCart}
+                        size="lg"
+                        className="flex-1 gap-2.5 h-12 sm:h-13 rounded-xl sm:rounded-2xl text-base font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check className="size-5" />
+                            <span>Đã thêm vào giỏ!</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingBag className="size-5" />
+                            <span>Thêm vào giỏ hàng</span>
+                          </>
+                        )}
+                      </Button>
+                      <Link
+                        href="/menu"
+                        className={cn(
+                          buttonVariants({ variant: "outline", size: "lg" }),
+                          "w-full sm:w-auto h-12 sm:h-13 rounded-xl sm:rounded-2xl text-sm font-medium"
+                        )}
+                      >
+                        Xem tiếp thực đơn
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-3 pt-2">
+                    <div className="p-3.5 rounded-xl border border-primary/20 bg-primary/5 text-xs text-muted-foreground">
+                      Website hiện đang tạm ngưng đặt hàng trực tuyến. Quý khách vui lòng bấm nút bên dưới để gọi hotline nhà hàng đặt món giao tận nơi.
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <a
+                        href={`tel:${contactPhoneTel}`}
+                        className={cn(
+                          buttonVariants({ variant: "default", size: "lg" }),
+                          "flex-1 gap-2.5 h-12 sm:h-13 rounded-xl sm:rounded-2xl text-base font-semibold shadow-md hover:shadow-lg transition-all"
+                        )}
+                      >
+                        <Phone className="size-5" />
+                        <span>Gọi đặt món: {contactPhone}</span>
+                      </a>
+                      <Link
+                        href="/menu"
+                        className={cn(
+                          buttonVariants({ variant: "outline", size: "lg" }),
+                          "w-full sm:w-auto h-12 sm:h-13 rounded-xl sm:rounded-2xl text-sm font-medium"
+                        )}
+                      >
+                        Xem tiếp thực đơn
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -375,49 +410,64 @@ export function ProductDetailView({
       {/* ==================== MOBILE STICKY BOTTOM ACTION BAR ==================== */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_25px_rgba(0,0,0,0.45)] px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
         <div className="mx-auto max-w-lg flex items-center justify-between gap-3">
-          {/* Bộ chọn số lượng thu nhỏ */}
-          <div className="inline-flex items-center rounded-xl border border-border bg-card shadow-xs shrink-0">
-            <button
-              type="button"
-              onClick={() => handleQuantityChange(-1)}
-              disabled={quantity <= 1}
-              className="size-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              aria-label="Giảm số lượng"
-            >
-              <Minus className="size-3.5" />
-            </button>
-            <span className="w-8 text-center text-xs font-bold font-mono text-foreground">
-              {quantity}
-            </span>
-            <button
-              type="button"
-              onClick={() => handleQuantityChange(1)}
-              disabled={quantity >= 99}
-              className="size-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              aria-label="Tăng số lượng"
-            >
-              <Plus className="size-3.5" />
-            </button>
-          </div>
+          {customerOrderingEnabled ? (
+            <>
+              {/* Bộ chọn số lượng thu nhỏ */}
+              <div className="inline-flex items-center rounded-xl border border-border bg-card shadow-xs shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                  className="size-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Giảm số lượng"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <span className="w-8 text-center text-xs font-bold font-mono text-foreground">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={quantity >= 99}
+                  className="size-9 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Tăng số lượng"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
 
-          {/* Nút Thêm vào giỏ hàng gọn gàng */}
-          <Button
-            onClick={handleAddToCart}
-            size="lg"
-            className="flex-1 gap-2 h-11 rounded-xl text-sm font-semibold shadow-md active:scale-98 transition-all"
-          >
-            {isAdded ? (
-              <>
-                <Check className="size-4" />
-                <span>Đã thêm!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="size-4" />
-                <span>Thêm vào giỏ</span>
-              </>
-            )}
-          </Button>
+              {/* Nút Thêm vào giỏ hàng gọn gàng */}
+              <Button
+                onClick={handleAddToCart}
+                size="lg"
+                className="flex-1 gap-2 h-11 rounded-xl text-sm font-semibold shadow-md active:scale-98 transition-all"
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="size-4" />
+                    <span>Đã thêm!</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="size-4" />
+                    <span>Thêm vào giỏ</span>
+                  </>
+                )}
+              </Button>
+            </>
+          ) : (
+            <a
+              href={`tel:${contactPhoneTel}`}
+              className={cn(
+                buttonVariants({ variant: "default", size: "lg" }),
+                "flex-1 gap-2 h-11 rounded-xl text-sm font-semibold shadow-md active:scale-98 transition-all"
+              )}
+            >
+              <Phone className="size-4" />
+              <span>Gọi hotline đặt món ({contactPhone})</span>
+            </a>
+          )}
         </div>
       </div>
     </div>

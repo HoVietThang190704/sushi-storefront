@@ -315,6 +315,13 @@ export interface StorePaymentConfig {
   isActive: boolean;
 }
 
+export interface StoreConfig {
+  id?: string;
+  key?: string;
+  customerOrderingEnabled: boolean;
+  contactPhone: string;
+}
+
 export async function fetchPaymentConfig(): Promise<StorePaymentConfig | null> {
   try {
     const baseUrl = getBaseUrl();
@@ -323,6 +330,20 @@ export async function fetchPaymentConfig(): Promise<StorePaymentConfig | null> {
     });
     if (!res.ok) return null;
     const json: ApiResponse<StorePaymentConfig> = await res.json();
+    return json.data || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchStoreConfig(): Promise<StoreConfig | null> {
+  try {
+    const baseUrl = getBaseUrl();
+    const res = await fetch(`${baseUrl}/api/orders/store-config`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json: ApiResponse<StoreConfig> = await res.json();
     return json.data || null;
   } catch {
     return null;
