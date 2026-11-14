@@ -21,15 +21,19 @@ export function StoreConfigRealtime() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const socketUrl =
+    const rawUrl =
       process.env.NEXT_PUBLIC_SOCKET_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
       `${window.location.protocol}//${window.location.hostname}:3000`;
+    const socketUrl = rawUrl.replace(/\/+$/, "");
 
     const socket: Socket = io(`${socketUrl}/realtime`, {
       withCredentials: false,
       transports: ["websocket", "polling"],
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
     });
 
     const handleUpdate = () => {
