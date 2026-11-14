@@ -7,10 +7,12 @@ import { SITE_CONFIG } from "@/config/site.config";
 export const storeConfigKey = ["store-config"] as const;
 
 export function useStoreConfig() {
-  const query = useQuery<StoreConfig | null>({
+  const query = useQuery<StoreConfig>({
     queryKey: storeConfigKey,
     queryFn: fetchStoreConfig,
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: "always",
+    refetchInterval: 60 * 1000,
   });
 
   const customerOrderingEnabled = query.data?.customerOrderingEnabled ?? true;

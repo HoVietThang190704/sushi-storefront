@@ -336,16 +336,17 @@ export async function fetchPaymentConfig(): Promise<StorePaymentConfig | null> {
   }
 }
 
-export async function fetchStoreConfig(): Promise<StoreConfig | null> {
-  try {
-    const baseUrl = getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/orders/store-config`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const json: ApiResponse<StoreConfig> = await res.json();
-    return json.data || null;
-  } catch {
-    return null;
+export async function fetchStoreConfig(): Promise<StoreConfig> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/orders/store-config`, {
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch store config: HTTP ${res.status}`);
   }
+  const json: ApiResponse<StoreConfig> = await res.json();
+  if (!json?.data) {
+    throw new Error("Invalid store config response structure");
+  }
+  return json.data;
 }
