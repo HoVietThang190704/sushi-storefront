@@ -36,6 +36,7 @@ export function BranchSelectionModal({
         className="w-full max-w-md bg-card border border-border/80 shadow-2xl rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[85vh] sm:max-h-[75vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="modal-branch-title"
       >
         {/* Thanh kéo vuốt trên mobile */}
         <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto my-2.5 shrink-0 sm:hidden" />
@@ -45,7 +46,7 @@ export function BranchSelectionModal({
           <div className="space-y-0.5 min-w-0">
             <div className="flex items-center gap-2">
               <Store className="size-4 text-primary shrink-0" />
-              <h3 className="font-bold text-base text-foreground truncate">
+              <h3 id="modal-branch-title" className="font-bold text-base text-foreground truncate">
                 Chọn Chi Nhánh Giao Hàng
               </h3>
             </div>

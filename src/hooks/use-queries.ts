@@ -24,7 +24,7 @@ export const queryKeys = {
   shippingFee: (district?: string, ward?: string, branchId?: string) =>
     ["shipping", "calculate", district || "", ward || "", branchId || ""] as const,
   paymentConfig: ["orders", "payment-config"] as const,
-  orderTracking: (code?: string) => ["orders", "track", code] as const,
+  orderTracking: (code?: string, token?: string) => ["orders", "track", code, token] as const,
 };
 
 // 2. Custom Hooks bọc TanStack Query cho Storefront
@@ -80,7 +80,7 @@ export function usePaymentConfig() {
 
 export function useTrackOrder(orderCode?: string, token?: string) {
   return useQuery<TrackOrderResponse | null>({
-    queryKey: ["orders", "track", orderCode, token],
+    queryKey: queryKeys.orderTracking(orderCode, token),
     queryFn: () => (orderCode ? trackOrder(orderCode, token) : Promise.resolve(null)),
     enabled: Boolean(orderCode && orderCode.trim().length > 0 && orderCode !== "ORD-PENDING"),
   });

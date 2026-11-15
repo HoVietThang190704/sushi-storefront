@@ -9,15 +9,5 @@ export const SITE_CONFIG = {
   hotlineTel: "19006868",
 } as const;
 
-// Cấu hình chuyển khoản thanh toán VietQR
-export const PAYMENT_CONFIG = {
-  vietqr: {
-    bankName: "MB Bank (Ngân hàng Quân Đội)",
-    accountHolder: "HANBI SUSHI PLATFORM",
-    accountNumber: "0988888888",
-    noteTemplate: "HANBI",
-  },
-} as const;
-
 // Biểu thức regex kiểm tra số điện thoại di động Việt Nam chuẩn (10 chữ số)
 export const VIETNAM_PHONE_REGEX = /^(0|\+84)[35789]\d{8}$/;

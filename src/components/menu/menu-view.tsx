@@ -123,30 +123,23 @@ export function MenuView() {
   }, [filteredProducts, safeCurrentPage]);
 
   const pageNumbers = React.useMemo(() => {
-    const pages: (number | "ellipsis")[] = [];
     if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-      if (safeCurrentPage > 3) {
-        pages.push("ellipsis");
-      }
-      const start = Math.max(2, safeCurrentPage - 1);
-      const end = Math.min(totalPages - 1, safeCurrentPage + 1);
-      for (let i = start; i <= end; i++) {
-        if (!pages.includes(i)) {
-          pages.push(i);
-        }
-      }
-      if (safeCurrentPage < totalPages - 2) {
-        pages.push("ellipsis");
-      }
-      if (!pages.includes(totalPages)) {
-        pages.push(totalPages);
-      }
+      return Array.from({ length: totalPages }, (_, i) => i + 1) as (number | "ellipsis")[];
     }
+
+    const pages: (number | "ellipsis")[] = [1];
+
+    if (safeCurrentPage > 3) pages.push("ellipsis");
+
+    const start = Math.max(2, safeCurrentPage - 1);
+    const end = Math.min(totalPages - 1, safeCurrentPage + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (safeCurrentPage < totalPages - 2) pages.push("ellipsis");
+    if (totalPages > 1) pages.push(totalPages);
+
     return pages;
   }, [totalPages, safeCurrentPage]);
 

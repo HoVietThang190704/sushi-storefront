@@ -37,7 +37,7 @@ import {
   usePaymentConfig,
 } from "@/hooks/use-queries";
 import { saveRecentOrder } from "@/lib/recent-orders";
-import { PAYMENT_CONFIG, VIETNAM_PHONE_REGEX } from "@/config/site.config";
+import { VIETNAM_PHONE_REGEX } from "@/config/site.config";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -897,19 +897,19 @@ export function CheckoutView() {
                           <div>
                             <span>Ngân hàng:</span>
                             <p className="font-semibold text-foreground">
-                              {paymentConfig?.bankName || PAYMENT_CONFIG.vietqr.bankName}
+                              {paymentConfig?.bankName || "—"}
                             </p>
                           </div>
                           <div>
                             <span>Chủ tài khoản:</span>
                             <p className="font-semibold text-foreground uppercase">
-                              {paymentConfig?.accountHolder || PAYMENT_CONFIG.vietqr.accountHolder}
+                              {paymentConfig?.accountHolder || "—"}
                             </p>
                           </div>
                           <div>
                             <span>Số tài khoản:</span>
                             <p className="font-mono font-bold text-primary text-sm sm:text-xs">
-                              {paymentConfig?.accountNumber || PAYMENT_CONFIG.vietqr.accountNumber}
+                              {paymentConfig?.accountNumber || "—"}
                             </p>
                           </div>
                           <div>

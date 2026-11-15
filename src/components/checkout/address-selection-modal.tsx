@@ -74,6 +74,7 @@ export function AddressSelectionModal({
         className="w-full max-w-lg bg-card border border-border/80 shadow-2xl rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[90vh] sm:max-h-[82vh] overflow-hidden animate-in slide-in-from-bottom duration-250"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="modal-address-title"
       >
         {/* Thanh kéo vuốt trên mobile */}
         <div className="w-12 h-1.5 rounded-full bg-muted-foreground/25 mx-auto my-2.5 shrink-0 sm:hidden" />
@@ -85,7 +86,7 @@ export function AddressSelectionModal({
               <MapPin className="size-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-foreground">
+              <h3 id="modal-address-title" className="font-bold text-sm sm:text-base text-foreground">
                 Chọn Phường / Xã TP.HCM
               </h3>
               <p className="text-3xs text-muted-foreground">

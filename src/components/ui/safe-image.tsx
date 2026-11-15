@@ -11,6 +11,13 @@ export interface SafeImageProps extends Omit<ImageProps, "onError"> {
   fallbackClassName?: string;
 }
 
+/** Normalize bất kỳ dạng src nào (string | StaticImageData) thành string để so sánh an toàn */
+function normalizeSrc(src: ImageProps["src"]): string {
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && src !== null && "src" in src) return src.src;
+  return "";
+}
+
 export function SafeImage({
   src,
   alt,
@@ -20,10 +27,11 @@ export function SafeImage({
   className,
   ...props
 }: SafeImageProps) {
-  const [failedSrc, setFailedSrc] = React.useState<ImageProps["src"] | null>(null);
+  const [failedSrcStr, setFailedSrcStr] = React.useState<string | null>(null);
   const [fallbackFailed, setFallbackFailed] = React.useState<boolean>(false);
 
-  const isMainError = !src || failedSrc === src;
+  const srcStr = normalizeSrc(src);
+  const isMainError = !src || failedSrcStr === srcStr;
 
   if (isMainError) {
     if (fallbackSrc && !fallbackFailed) {
@@ -62,10 +70,11 @@ export function SafeImage({
       alt={alt}
       className={className}
       onError={() => {
-        setFailedSrc(src);
+        setFailedSrcStr(srcStr);
         setFallbackFailed(false);
       }}
       {...props}
     />
   );
 }
+

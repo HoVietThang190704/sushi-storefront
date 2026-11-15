@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { QrCode, Copy, Check, Info, Download, ShieldCheck } from "lucide-react";
 import { formatPrice, parsePrice, type StorePaymentConfig } from "@/lib/api";
 import { SafeImage } from "@/components/ui/safe-image";
-import { PAYMENT_CONFIG } from "@/config/site.config";
 
 export interface BankTransferQrBoxProps {
   orderCode: string;
@@ -28,9 +27,9 @@ export function BankTransferQrBox({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // 1. Phân tích thông tin ngân hàng từ snapshot lưu trong đơn hàng, hoặc fallback cấu hình cửa hàng
-  let bankName = currentPaymentConfig?.bankName || PAYMENT_CONFIG.vietqr.bankName;
-  let accountNumber = currentPaymentConfig?.accountNumber || PAYMENT_CONFIG.vietqr.accountNumber;
-  let accountHolder = currentPaymentConfig?.accountHolder || PAYMENT_CONFIG.vietqr.accountHolder;
+  let bankName = currentPaymentConfig?.bankName || "";
+  let accountNumber = currentPaymentConfig?.accountNumber || "";
+  let accountHolder = currentPaymentConfig?.accountHolder || "";
   let transferSyntax = currentPaymentConfig?.transferSyntax || "HANBI";
   let note = currentPaymentConfig?.note || "Vui lòng ghi đúng mã đơn hàng trong nội dung chuyển khoản để quán xác nhận nhanh nhất.";
 
