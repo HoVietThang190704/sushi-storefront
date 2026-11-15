@@ -5,10 +5,14 @@ import {
   fetchCategories,
   fetchProducts,
   fetchShippingLocations,
+  calculateShippingFee,
+  fetchPaymentConfig,
   trackOrder,
   type Category,
   type Product,
   type WardLocationItem,
+  type ShippingCalculationResult,
+  type StorePaymentConfig,
   type TrackOrderResponse,
 } from "@/lib/api";
 
@@ -17,6 +21,9 @@ export const queryKeys = {
   categories: ["catalog", "categories"] as const,
   products: (categoryId?: string) => ["catalog", "products", categoryId || "all"] as const,
   shippingLocations: ["shipping", "locations"] as const,
+  shippingFee: (district?: string, ward?: string, branchId?: string) =>
+    ["shipping", "calculate", district || "", ward || "", branchId || ""] as const,
+  paymentConfig: ["orders", "payment-config"] as const,
   orderTracking: (code?: string) => ["orders", "track", code] as const,
 };
 
@@ -39,6 +46,35 @@ export function useShippingLocations() {
   return useQuery<WardLocationItem[]>({
     queryKey: queryKeys.shippingLocations,
     queryFn: fetchShippingLocations,
+  });
+}
+
+export function useShippingFee(params: {
+  district?: string;
+  ward?: string;
+  branchId?: string;
+  enabled?: boolean;
+}) {
+  const { district, ward, branchId, enabled = true } = params;
+  return useQuery<ShippingCalculationResult | null>({
+    queryKey: queryKeys.shippingFee(district, ward, branchId),
+    queryFn: () =>
+      ward
+        ? calculateShippingFee({
+            district,
+            ward,
+            branchId,
+          })
+        : Promise.resolve(null),
+    enabled: Boolean(enabled && ward),
+    retry: false,
+  });
+}
+
+export function usePaymentConfig() {
+  return useQuery<StorePaymentConfig | null>({
+    queryKey: queryKeys.paymentConfig,
+    queryFn: fetchPaymentConfig,
   });
 }
 

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { io, Socket } from "socket.io-client";
 import { storeConfigKey } from "@/hooks/use-store-config";
+import { getRealtimeSocketUrl } from "@/lib/api";
 
 /**
  * StoreConfigRealtime:
@@ -21,11 +22,7 @@ export function StoreConfigRealtime() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const rawUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      `${window.location.protocol}//${window.location.hostname}:3000`;
-    const socketUrl = rawUrl.replace(/\/+$/, "");
+    const socketUrl = getRealtimeSocketUrl();
 
     const socket: Socket = io(`${socketUrl}/realtime`, {
       withCredentials: false,

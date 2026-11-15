@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, Store, Clock, ArrowRight } from "lucide-react";
+import { ShoppingBag, MapPin, Truck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function OrderStepsSection() {
@@ -13,17 +13,17 @@ export function OrderStepsSection() {
     },
     {
       step: "02",
-      icon: Store,
-      title: "Chọn Chi Nhánh & Hẹn Giờ",
+      icon: MapPin,
+      title: "Chọn Khu Vực Giao Hàng",
       description:
-        "Khi kiểm tra đơn, chọn chi nhánh thuận tiện nhất và khung giờ bạn muốn ghé lấy món.",
+        "Nhập địa chỉ nhận hàng tại TP.HCM, hệ thống tự động chọn chi nhánh gần nhất và tính phí ship minh bạch.",
     },
     {
       step: "03",
-      icon: Clock,
-      title: "Nhận Món & Thanh Toán",
+      icon: Truck,
+      title: "Giao Nhanh Chuẩn Lạnh",
       description:
-        "Đầu bếp chuẩn bị sẵn sàng trước giờ hẹn. Bạn ghé quầy nhận món tươi ngon và thanh toán trực tiếp.",
+        "Đầu bếp chế biến tươi mới, đóng hộp giữ nhiệt kèm đá gel và giao tận tay bạn nhanh chóng.",
     },
   ];
 
@@ -35,10 +35,10 @@ export function OrderStepsSection() {
             Quy Trình Đơn Giản
           </span>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Đặt Món Take Away Trong 3 Bước
+            Đặt Món Giao Tận Nơi Trong 3 Bước
           </h2>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-            Tiết kiệm thời gian, không cần xếp hàng chờ đợi chế biến tại quầy
+            Tiện lợi, nhanh chóng, giữ trọn độ tươi ngon chuẩn nhà hàng Nhật Bản ngay tại nhà
           </p>
         </div>
 

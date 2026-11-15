@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useStoreConfig } from "@/hooks/use-store-config";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Product, formatPrice } from "@/lib/api";
+import { Product, formatPrice, parsePrice } from "@/lib/api";
 import { useCartStore } from "@/lib/cart-store";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,11 +39,7 @@ export function ProductDetailView({
     useStoreConfig();
   const addItem = useCartStore((state) => state.addItem);
 
-  const priceNum =
-    typeof product.sellingPrice === "string"
-      ? parseFloat(product.sellingPrice)
-      : product.sellingPrice;
-  const unitPrice = isNaN(priceNum) ? 0 : priceNum;
+  const unitPrice = parsePrice(product.sellingPrice);
   const totalPrice = unitPrice * quantity;
 
   const handleQuantityChange = (delta: number) => {
@@ -65,7 +61,7 @@ export function ProductDetailView({
     setTimeout(() => setIsAdded(false), 1500);
 
     toast.success(`Đã thêm ${quantity}x "${product.name}" vào giỏ hàng`, {
-      description: `Tổng: ${formatPrice(totalPrice)} • Đặt Take Away`,
+      description: `Tổng: ${formatPrice(totalPrice)} • Giao tận nơi TP.HCM`,
     });
   };
 
@@ -183,7 +179,7 @@ export function ProductDetailView({
               <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 flex items-baseline justify-between">
                 <div>
                   <span className="text-xs text-muted-foreground block mb-0.5">
-                    Đơn giá Take Away
+                    Đơn giá niêm yết
                   </span>
                   <span className="text-2xl sm:text-3xl font-extrabold text-primary font-mono tracking-tight">
                     {formatPrice(unitPrice)}
@@ -358,10 +354,7 @@ export function ProductDetailView({
 
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
               {relatedProducts.slice(0, 4).map((rel) => {
-                const relPrice =
-                  typeof rel.sellingPrice === "string"
-                    ? parseFloat(rel.sellingPrice)
-                    : rel.sellingPrice;
+                const relPrice = parsePrice(rel.sellingPrice);
                 const relSlug = rel.slug || rel.id;
 
                 return (

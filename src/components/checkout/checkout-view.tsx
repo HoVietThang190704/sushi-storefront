@@ -30,12 +30,13 @@ import { useCartStore } from "@/lib/cart-store";
 import {
   formatPrice,
   createOrder,
-  calculateShippingFee,
-  type ShippingCalculationResult,
-  fetchPaymentConfig,
-  type StorePaymentConfig,
 } from "@/lib/api";
-import { useShippingLocations } from "@/hooks/use-queries";
+import {
+  useShippingLocations,
+  useShippingFee,
+  usePaymentConfig,
+} from "@/hooks/use-queries";
+import { saveRecentOrder } from "@/lib/recent-orders";
 import { PAYMENT_CONFIG, VIETNAM_PHONE_REGEX } from "@/config/site.config";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -72,14 +73,9 @@ export function CheckoutView() {
   const [selectedBranchId, setSelectedBranchId] = React.useState<string>("");
   const [note, setNote] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState<"CASH" | "VIETQR">("CASH");
-  const [paymentConfig, setPaymentConfig] = React.useState<StorePaymentConfig | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  React.useEffect(() => {
-    fetchPaymentConfig().then((cfg) => {
-      if (cfg) setPaymentConfig(cfg);
-    });
-  }, []);
+  const { data: paymentConfig = null } = usePaymentConfig();
 
   // Modal / Sheet tìm kiếm Phường/Xã (Tên mới & Tên cũ)
   const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
@@ -87,10 +83,8 @@ export function CheckoutView() {
   // Modal / Sheet đổi chi nhánh phục vụ
   const [isBranchModalOpen, setIsBranchModalOpen] = React.useState(false);
 
-  // Dữ liệu vị trí & phí ship quản lý bằng TanStack Query (tự động cache và lấy lại khi cần)
+  // Dữ liệu vị trí & phí ship quản lý bằng TanStack Query
   const { data: locations = [] } = useShippingLocations();
-  const [rawShippingCalc, setRawShippingCalc] = React.useState<ShippingCalculationResult | null>(null);
-  const [calculatingFee, setCalculatingFee] = React.useState(false);
 
   // Thông tin Phường/Xã hiện tại được chọn
   const currentWardInfo = React.useMemo(() => {
@@ -98,57 +92,36 @@ export function CheckoutView() {
     return locations.find((loc) => loc.ward === selectedWard);
   }, [locations, selectedWard]);
 
+  const validBranchIdForWard = React.useMemo(() => {
+    if (!selectedBranchId || !currentWardInfo?.supportedBranches) return undefined;
+    const isValid = currentWardInfo.supportedBranches.some((b) => b.id === selectedBranchId);
+    return isValid ? selectedBranchId : undefined;
+  }, [selectedBranchId, currentWardInfo]);
+
+  const shouldCalculateShipping = Boolean(
+    selectedWard && (!currentWardInfo || currentWardInfo.isSupported)
+  );
+
+  const {
+    data: rawShippingCalc = null,
+    isFetching: calculatingFee,
+  } = useShippingFee({
+    district: selectedDistrict || currentWardInfo?.district,
+    ward: selectedWard,
+    branchId: validBranchIdForWard,
+    enabled: shouldCalculateShipping,
+  });
+
   // Phí ship suy ra từ kết quả tính toán và địa chỉ hợp lệ
   const shippingCalc = React.useMemo(() => {
-    if (!selectedWard || (currentWardInfo && !currentWardInfo.isSupported)) {
+    if (!shouldCalculateShipping) {
       return null;
     }
-    // Chỉ chấp nhận kết quả tính phí nếu khớp với đúng phường/xã hiện tại
     if (rawShippingCalc && rawShippingCalc.ward !== selectedWard) {
       return null;
     }
     return rawShippingCalc;
-  }, [selectedWard, currentWardInfo, rawShippingCalc]);
-
-  // 2. Tính lại phí ship khi đổi Ward hoặc BranchId
-  React.useEffect(() => {
-    if (!selectedWard || (currentWardInfo && !currentWardInfo.isSupported)) {
-      return;
-    }
-
-    let active = true;
-    async function updateFee() {
-      setCalculatingFee(true);
-      try {
-        // Chỉ gửi branchId nếu chi nhánh đó thực sự nằm trong danh sách hỗ trợ của ward này
-        const isBranchValid =
-          selectedBranchId &&
-          currentWardInfo?.supportedBranches?.some((b) => b.id === selectedBranchId);
-        const branchToSend = isBranchValid ? selectedBranchId : undefined;
-
-        const res = await calculateShippingFee({
-          district: selectedDistrict || currentWardInfo?.district,
-          ward: selectedWard,
-          branchId: branchToSend,
-        });
-        if (active) {
-          setRawShippingCalc(res);
-        }
-      } catch (err) {
-        if (active) {
-          console.error("calculateShippingFee error:", err);
-          setRawShippingCalc(null);
-        }
-      } finally {
-        if (active) setCalculatingFee(false);
-      }
-    }
-
-    updateFee();
-    return () => {
-      active = false;
-    };
-  }, [selectedDistrict, selectedWard, selectedBranchId, currentWardInfo]);
+  }, [shouldCalculateShipping, selectedWard, rawShippingCalc]);
 
   if (!isMounted) {
     return (
@@ -303,25 +276,13 @@ export function CheckoutView() {
 
       const orderCode = res.order.code || res.order.orderCode || "ORD-SUCCESS";
 
-      // Lưu vào localStorage để hỗ trợ khách tra cứu nhanh 1-click
-      try {
-        if (typeof window !== "undefined") {
-          const recentOrders = JSON.parse(localStorage.getItem("hanbi_recent_orders") || "[]");
-          const newOrder = {
-            code: orderCode,
-            token: res.trackingToken || "",
-            totalAmount: res.order.totalAmount,
-            createdAt: new Date().toISOString(),
-          };
-          const updatedOrders = [
-            newOrder,
-            ...recentOrders.filter((o: { code: string }) => o.code !== orderCode),
-          ].slice(0, 5);
-          localStorage.setItem("hanbi_recent_orders", JSON.stringify(updatedOrders));
-        }
-      } catch (err) {
-        console.warn("Could not save recent order to localStorage", err);
-      }
+      // Lưu vào localStorage và phát sự kiện đồng bộ trong cùng tab
+      saveRecentOrder({
+        code: orderCode,
+        token: res.trackingToken || "",
+        totalAmount: res.order.totalAmount,
+        createdAt: new Date().toISOString(),
+      });
 
       const params = new URLSearchParams({
         code: orderCode,
@@ -919,12 +880,15 @@ export function CheckoutView() {
 
                       <div className="flex flex-col sm:flex-row gap-3 items-center bg-card p-3 rounded-lg border border-border/60">
                         {paymentConfig?.qrImageUrl && (
-                          <div className="size-24 rounded-lg overflow-hidden border bg-white p-1 shrink-0 flex items-center justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                          <div className="relative size-24 rounded-lg overflow-hidden border bg-white p-1 shrink-0 flex items-center justify-center">
+                            <SafeImage
                               src={paymentConfig.qrImageUrl}
                               alt="Mã QR"
-                              className="size-full object-contain"
+                              fill
+                              sizes="96px"
+                              className="object-contain p-1"
+                              fallbackSrc="/images/placeholder-dish.svg"
+                              fallbackText="QR"
                             />
                           </div>
                         )}

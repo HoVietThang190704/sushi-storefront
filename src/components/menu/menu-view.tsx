@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SafeImage } from "@/components/ui/safe-image";
-import { Product, formatPrice } from "@/lib/api";
+import { Product, formatPrice, parsePrice } from "@/lib/api";
 import { useCategories, useProducts } from "@/hooks/use-queries";
 import { useCartStore } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
@@ -159,15 +159,12 @@ export function MenuView() {
   };
 
   const handleAddToCart = (product: Product) => {
-    const priceNum =
-      typeof product.sellingPrice === "string"
-        ? parseFloat(product.sellingPrice)
-        : product.sellingPrice;
+    const priceNum = parsePrice(product.sellingPrice);
 
     addItem({
       id: product.id,
       name: product.name,
-      price: isNaN(priceNum) ? 0 : priceNum,
+      price: priceNum,
       imageUrl: product.imageUrl || undefined,
     });
 
@@ -177,7 +174,7 @@ export function MenuView() {
     }, 1200);
 
     toast.success(`Đã thêm "${product.name}" vào giỏ hàng`, {
-      description: `${formatPrice(product.sellingPrice)} • Đặt Take Away`,
+      description: `${formatPrice(product.sellingPrice)} • Giao tận nơi TP.HCM`,
     });
   };
 
@@ -224,15 +221,15 @@ export function MenuView() {
             <div>
               <div className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary dark:text-red-400">
                 <span className="h-0.5 w-6 bg-primary dark:bg-red-500" />
-                <span>CHỌN MÓN ONLINE • お持ち帰り注文</span>
+                <span>CHỌN MÓN ONLINE • 宅配・お持ち帰り</span>
               </div>
               <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground font-serif">
                 <span className="sm:hidden">Thực đơn</span>
-                <span className="hidden sm:inline">Thực Đơn Trực Tuyến &amp; Đặt Mang Đi</span>
+                <span className="hidden sm:inline">Thực Đơn Trực Tuyến &amp; Giao Tận Nơi</span>
               </h1>
               <p className="hidden sm:block mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
                 Thưởng thức các lát Sashimi tươi rói, sushi Nigiri tinh tế, cơm cuộn thơm lừng
-                cùng những món ăn nóng hổi chuẩn vị Nhật Bản. Thêm nhanh vào giỏ và nhận tại quầy.
+                cùng những món ăn nóng hổi chuẩn vị Nhật Bản. Thêm nhanh vào giỏ và nhận giao tận nơi tại TP.HCM.
               </p>
             </div>
 

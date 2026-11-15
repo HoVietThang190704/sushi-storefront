@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { QrCode, Copy, Check, Info, Download, ShieldCheck } from "lucide-react";
-import { formatPrice, type StorePaymentConfig } from "@/lib/api";
+import { formatPrice, parsePrice, type StorePaymentConfig } from "@/lib/api";
+import { SafeImage } from "@/components/ui/safe-image";
 import { PAYMENT_CONFIG } from "@/config/site.config";
 
 export interface BankTransferQrBoxProps {
@@ -46,7 +47,7 @@ export function BankTransferQrBox({
 
   const qrImageUrl = paymentQrUrl || currentPaymentConfig?.qrImageUrl || null;
   const transferMessage = `${transferSyntax} ${orderCode}`;
-  const numericAmount = typeof totalAmount === "number" ? totalAmount : Number(totalAmount) || 0;
+  const numericAmount = parsePrice(totalAmount);
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -100,11 +101,14 @@ export function BankTransferQrBox({
           {qrImageUrl ? (
             <div className="space-y-2 text-center w-full">
               <div className="relative w-48 h-48 sm:w-52 sm:h-52 mx-auto rounded-xl overflow-hidden bg-white p-2 shadow-sm border border-border/80 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <SafeImage
                   src={qrImageUrl}
                   alt={`Mã QR chuyển khoản đơn ${orderCode}`}
-                  className="w-full h-full object-contain"
+                  fill
+                  sizes="208px"
+                  className="object-contain p-2"
+                  fallbackSrc="/images/placeholder-dish.svg"
+                  fallbackText="VietQR"
                 />
               </div>
               <a

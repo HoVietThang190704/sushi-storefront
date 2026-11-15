@@ -25,8 +25,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useTrackOrder } from "@/hooks/use-queries";
-import { formatPrice } from "@/lib/api";
-import { SITE_CONFIG } from "@/config/site.config";
+import { useStoreConfig } from "@/hooks/use-store-config";
+import { formatPrice, getRealtimeSocketUrl } from "@/lib/api";
 import { BankTransferQrBox } from "@/components/payment/bank-transfer-qr-box";
 import { io, Socket } from "socket.io-client";
 
@@ -53,6 +53,7 @@ export function OrderSuccessView() {
   const token = searchParams.get("token") || "";
   const [copied, setCopied] = React.useState(false);
   const [showItemDetails, setShowItemDetails] = React.useState(false);
+  const { contactPhone, contactPhoneTel } = useStoreConfig();
 
   // Trạng thái đơn hàng thực tế lấy qua TanStack Query
   const { data: order = null, refetch: refreshOrderDetail } = useTrackOrder(orderCode, token);
@@ -64,11 +65,7 @@ export function OrderSuccessView() {
 
     if (order.status === "COMPLETED" || order.status === "CANCELLED") return;
 
-    const socketUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL ||
-      (typeof window !== "undefined"
-        ? `${window.location.protocol}//${window.location.hostname}:3000`
-        : "http://localhost:3000");
+    const socketUrl = getRealtimeSocketUrl();
 
     const socket: Socket = io(`${socketUrl}/realtime`, {
       auth: {
@@ -195,8 +192,8 @@ export function OrderSuccessView() {
                   <span className="font-bold block">Đơn hàng này đã bị hủy</span>
                   <span className="text-2xs text-muted-foreground">
                     Vui lòng liên hệ hotline{" "}
-                    <a href={`tel:${SITE_CONFIG.hotlineTel}`} className="underline font-mono text-foreground">
-                      {SITE_CONFIG.hotline}
+                    <a href={`tel:${contactPhoneTel}`} className="underline font-mono text-foreground">
+                      {contactPhone}
                     </a>{" "}
                     nếu cần hỗ trợ.
                   </span>

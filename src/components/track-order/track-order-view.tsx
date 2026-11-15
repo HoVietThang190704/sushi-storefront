@@ -33,18 +33,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { trackOrder, cancelGuestOrder, formatPrice, TrackOrderResponse } from "@/lib/api";
-import { SITE_CONFIG } from "@/config/site.config";
+import {
+  trackOrder,
+  cancelGuestOrder,
+  formatPrice,
+  getRealtimeSocketUrl,
+  TrackOrderResponse,
+} from "@/lib/api";
+import {
+  useRecentOrders,
+  getRecentOrderToken,
+  type RecentOrderLocal,
+} from "@/lib/recent-orders";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { BankTransferQrBox } from "@/components/payment/bank-transfer-qr-box";
 import { toast } from "sonner";
 import { io, Socket } from "socket.io-client";
-
-interface RecentOrderLocal {
-  code: string;
-  token?: string;
-  totalAmount?: number | string;
-  createdAt: string;
-}
 
 const ORDER_STEPS = [
   { key: "PENDING", label: "Tiếp nhận", desc: "Chờ xác nhận đơn", icon: Clock },
@@ -95,23 +99,10 @@ function getStatusBadge(status: string) {
   }
 }
 
-function getRecentOrdersSnapshot(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return localStorage.getItem("hanbi_recent_orders");
-  } catch {
-    return null;
-  }
-}
-
-function subscribeToStorage(callback: () => void) {
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
-}
-
 export function TrackOrderView() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { contactPhone, contactPhoneTel } = useStoreConfig();
 
   const queryCode = searchParams.get("code") || "";
   const queryToken = searchParams.get("token") || "";
@@ -127,22 +118,7 @@ export function TrackOrderView() {
   const [copied, setCopied] = React.useState(false);
   const [showSearchForm, setShowSearchForm] = React.useState(false);
 
-  const storedRecent = React.useSyncExternalStore(
-    subscribeToStorage,
-    getRecentOrdersSnapshot,
-    () => null
-  );
-
-  // Đơn hàng gần đây từ localStorage
-  const recentOrders = React.useMemo(() => {
-    if (!storedRecent) return [];
-    try {
-      const list: RecentOrderLocal[] = JSON.parse(storedRecent);
-      return Array.isArray(list) ? list : [];
-    } catch {
-      return [];
-    }
-  }, [storedRecent]);
+  const recentOrders = useRecentOrders();
 
   // Modal hủy đơn
   const [showCancelModal, setShowCancelModal] = React.useState(false);
@@ -158,22 +134,7 @@ export function TrackOrderView() {
       }
 
       // Tìm token trong localStorage nếu chưa có
-      let token = tokenToTrack?.trim();
-      if (!token && typeof window !== "undefined") {
-        try {
-          const stored = localStorage.getItem("hanbi_recent_orders");
-          if (stored) {
-            const list: RecentOrderLocal[] = JSON.parse(stored);
-            const found = list.find((o) => o.code.toUpperCase() === cleanCode.toUpperCase());
-            if (found?.token) {
-              token = found.token;
-            }
-          }
-        } catch {
-          // ignore
-        }
-      }
-
+      const token = tokenToTrack?.trim() || getRecentOrderToken(cleanCode);
       const phone = phoneToTrack?.trim();
 
       if (!token && !phone) {
@@ -214,21 +175,7 @@ export function TrackOrderView() {
     let active = true;
 
     async function autoTrack() {
-      let token = queryToken?.trim();
-      if (!token && typeof window !== "undefined") {
-        try {
-          const stored = localStorage.getItem("hanbi_recent_orders");
-          if (stored) {
-            const list: RecentOrderLocal[] = JSON.parse(stored);
-            const found = list.find((o) => o.code === queryCode.trim());
-            if (found?.token) {
-              token = found.token;
-            }
-          }
-        } catch {
-          // ignore
-        }
-      }
+      const token = queryToken?.trim() || getRecentOrderToken(queryCode);
 
       try {
         const data = await trackOrder(queryCode.trim(), token, queryPhone?.trim());
@@ -286,7 +233,7 @@ export function TrackOrderView() {
   const handleCancelOrder = async () => {
     if (!order) return;
     if (!activeToken) {
-      toast.error(`Bạn đang tra cứu bằng số điện thoại. Để hủy đơn, vui lòng mở lại thiết bị hoặc liên hệ hotline ${SITE_CONFIG.hotline}.`);
+      toast.error(`Bạn đang tra cứu bằng số điện thoại. Để hủy đơn, vui lòng mở lại thiết bị hoặc liên hệ hotline ${contactPhone}.`);
       return;
     }
 
@@ -317,11 +264,7 @@ export function TrackOrderView() {
       return;
     }
 
-    const socketUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL ||
-      (typeof window !== "undefined"
-        ? `${window.location.protocol}//${window.location.hostname}:3000`
-        : "http://localhost:3000");
+    const socketUrl = getRealtimeSocketUrl();
     const socket: Socket = io(`${socketUrl}/realtime`, {
       auth: {
         token: order.trackingTicket,
@@ -675,8 +618,8 @@ export function TrackOrderView() {
                     </p>
                     <p>
                       Đơn hàng đã bắt đầu chế biến nên không thể tự hủy trên web. Nếu cần thay đổi gấp, vui lòng gọi hotline{" "}
-                      <a href={`tel:${SITE_CONFIG.hotlineTel}`} className="text-primary font-bold hover:underline font-mono">
-                        {SITE_CONFIG.hotline}
+                      <a href={`tel:${contactPhoneTel}`} className="text-primary font-bold hover:underline font-mono">
+                        {contactPhone}
                       </a>{" "}
                       để nhân viên hỗ trợ trực tiếp.
                     </p>
@@ -818,14 +761,14 @@ export function TrackOrderView() {
 
                 {/* HỖ TRỢ GỌI HOTLINE TRỰC TIẾP */}
                 <a
-                  href={`tel:${SITE_CONFIG.hotlineTel}`}
+                  href={`tel:${contactPhoneTel}`}
                   className="p-3 rounded-xl bg-secondary/30 hover:bg-secondary/60 border border-border/60 text-xs flex items-center justify-between transition-colors mt-3 group"
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <PhoneCall className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="min-w-0">
                       <span className="font-semibold text-foreground block text-2xs">Cần hỗ trợ đơn hàng?</span>
-                      <span className="text-3xs text-muted-foreground">Hotline: <strong className="font-mono text-foreground">{SITE_CONFIG.hotline}</strong></span>
+                      <span className="text-3xs text-muted-foreground">Hotline: <strong className="font-mono text-foreground">{contactPhone}</strong></span>
                     </div>
                   </div>
                   <span className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:underline">Gọi ngay</span>

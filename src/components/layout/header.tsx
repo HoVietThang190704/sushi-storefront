@@ -7,11 +7,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Search,
   ShoppingBag,
-  User,
   Menu as MenuIcon,
   X,
   Phone,
-  MapPin,
   UtensilsCrossed,
   Home as HomeIcon,
   Package,
@@ -37,8 +35,8 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/", icon: HomeIcon },
   { label: "Thực đơn", href: "/menu", icon: UtensilsCrossed },
-  { label: "Chi nhánh", href: "/branches", icon: MapPin },
-  { label: "Liên hệ", href: "/contact", icon: Phone },
+  { label: "Tra cứu đơn", href: "/track-order", icon: Package },
+  { label: "Liên hệ", href: "#footer-contact", icon: Phone },
 ];
 
 export function Header() {
@@ -113,7 +111,7 @@ export function Header() {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
-                : pathname.startsWith(item.href);
+                : !item.href.startsWith("#") && pathname.startsWith(item.href);
 
             return (
               <Link
@@ -270,7 +268,7 @@ export function Header() {
                     const isActive =
                       item.href === "/"
                         ? pathname === "/"
-                        : pathname.startsWith(item.href);
+                        : !item.href.startsWith("#") && pathname.startsWith(item.href);
 
                     return (
                       <Link
@@ -292,7 +290,7 @@ export function Header() {
                 </div>
 
                 <div className="mt-8 border-t border-border pt-6 flex flex-col gap-3">
-                  {/* Card Đơn mua của tôi kiểu Shopee trên Mobile */}
+                  {/* Card Đơn mua của tôi trên Mobile */}
                   <Link
                     href="/track-order"
                     onClick={() => setMobileMenuOpen(false)}
@@ -305,7 +303,7 @@ export function Header() {
                       <div className="text-left">
                         <span className="text-xs font-semibold block">Đơn mua của tôi</span>
                         <span className="text-[10px] text-muted-foreground block">
-                          Kiểm tra tiến độ đơn Take Away
+                          Kiểm tra tiến độ đơn giao tận nơi
                         </span>
                       </div>
                     </div>
@@ -323,19 +321,6 @@ export function Header() {
                     >
                       <UtensilsCrossed className="size-4" />
                       Xem thực đơn ngay
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    asChild
-                    className="w-full justify-start gap-2"
-                  >
-                    <Link
-                      href="/account"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <User className="size-4" />
-                      Tài khoản của tôi
                     </Link>
                   </Button>
                 </div>

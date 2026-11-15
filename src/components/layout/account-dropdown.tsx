@@ -2,51 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { User, Package, ChevronRight, Clock, Sparkles } from "lucide-react";
+import { User, Package, ChevronRight, Clock, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-interface RecentOrderLocal {
-  code: string;
-  token?: string;
-  totalAmount?: number | string;
-  createdAt: string;
-}
-
-function getRecentOrderSnapshot(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return localStorage.getItem("hanbi_recent_orders");
-  } catch {
-    return null;
-  }
-}
-
-function subscribeToStorage(callback: () => void) {
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
-}
+import { useRecentOrders } from "@/lib/recent-orders";
 
 export function AccountDropdown() {
   const [isOpen, setIsOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
-  const storedOrders = React.useSyncExternalStore(
-    subscribeToStorage,
-    getRecentOrderSnapshot,
-    () => null
-  );
-
-  // Đọc đơn hàng gần nhất từ localStorage an toàn cho SSR và không cascading render
-  const recentOrder = React.useMemo(() => {
-    if (!storedOrders) return null;
-    try {
-      const list: RecentOrderLocal[] = JSON.parse(storedOrders);
-      return list && list.length > 0 ? list[0] : null;
-    } catch {
-      return null;
-    }
-  }, [storedOrders]);
+  const recentOrders = useRecentOrders();
+  const recentOrder = recentOrders.length > 0 ? recentOrders[0] : null;
 
   // Đóng dropdown khi click ra ngoài
   React.useEffect(() => {
@@ -103,7 +69,7 @@ export function AccountDropdown() {
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground truncate">
-                Hanbi Sushi Take Away
+                Giao hàng tận nơi TP.HCM
               </p>
             </div>
           </div>
@@ -133,7 +99,7 @@ export function AccountDropdown() {
             </div>
           )}
 
-          {/* DANH MỤC THAO TÁC SHOPEE STYLE */}
+          {/* DANH MỤC THAO TÁC */}
           <div className="mt-2 space-y-1 text-xs">
             {/* ĐƠN MUA CỦA TÔI */}
             <Link
@@ -148,27 +114,27 @@ export function AccountDropdown() {
                 <div>
                   <span className="block font-semibold">Đơn mua của tôi</span>
                   <span className="text-[10px] text-muted-foreground">
-                    Kiểm tra tiến độ đơn hàng Take Away
+                    Kiểm tra tiến độ đơn giao tận nơi
                   </span>
                 </div>
               </div>
               <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-0.5" />
             </Link>
 
-            {/* ĐĂNG NHẬP / THÀNH VIÊN */}
+            {/* KHÁM PHÁ THỰC ĐƠN */}
             <Link
-              href="/account"
+              href="/menu"
               onClick={() => setIsOpen(false)}
               className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors text-muted-foreground hover:text-foreground group"
             >
               <div className="flex items-center gap-2.5">
                 <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                  <Sparkles className="size-4" />
+                  <UtensilsCrossed className="size-4" />
                 </div>
                 <div>
-                  <span className="block font-medium text-foreground">Đăng nhập thành viên</span>
+                  <span className="block font-medium text-foreground">Thực đơn trực tuyến</span>
                   <span className="text-[10px] text-muted-foreground">
-                    Tích điểm đổi quà Hanbi Rewards
+                    Chọn món sushi & combo giao nhanh
                   </span>
                 </div>
               </div>

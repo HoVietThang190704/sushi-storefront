@@ -44,9 +44,29 @@ function getBaseUrl(): string {
   return process.env.INTERNAL_API_URL || "http://localhost:3000";
 }
 
+export function getRealtimeSocketUrl(): string {
+  const rawUrl =
+    process.env.NEXT_PUBLIC_SOCKET_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== "undefined"
+      ? `${window.location.protocol}//${window.location.hostname}:3000`
+      : "http://localhost:3000");
+  return rawUrl.replace(/\/+$/, "");
+}
+
+export function parsePrice(amount: number | string | null | undefined): number {
+  if (typeof amount === "number") {
+    return Number.isFinite(amount) ? amount : 0;
+  }
+  if (typeof amount === "string") {
+    const parsed = parseFloat(amount);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
 export function formatPrice(amount: number | string): string {
-  const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  if (isNaN(num)) return "0 ₫";
+  const num = parsePrice(amount);
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",

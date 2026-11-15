@@ -6,10 +6,11 @@ import Image from "next/image";
 import { Phone, MapPin, Clock } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { SITE_CONFIG } from "@/config/site.config";
+import { useStoreConfig } from "@/hooks/use-store-config";
 
 export function Footer() {
   const pathname = usePathname();
+  const { contactPhone, contactPhoneTel } = useStoreConfig();
 
   // Tránh hydration mismatch khi server render và client render có route pathname khác nhau
   const isMounted = React.useSyncExternalStore(
@@ -28,9 +29,10 @@ export function Footer() {
 
   return (
     <footer
+      id="footer-contact"
       suppressHydrationWarning
       className={cn(
-        "border-t border-border/60 bg-card text-foreground",
+        "border-t border-border/60 bg-card text-foreground scroll-mt-20",
         isMounted && isMinimalMobile && "hidden sm:block"
       )}
     >
@@ -49,8 +51,7 @@ export function Footer() {
               />
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Hệ thống sushi tươi ngon chế biến sẵn sàng mang đi. Đặt trước,
-              nhận tại quầy và thưởng thức trọn vẹn hương vị tinh tế chuẩn Nhật.
+              Hệ thống sushi tươi ngon chuẩn vị Nhật Bản. Đặt trực tuyến, đóng hộp giữ lạnh chuyên dụng và giao hàng tận nơi nhanh chóng tại TP.HCM.
             </p>
           </div>
 
@@ -78,10 +79,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/branches"
+                  href="/cart"
                   className="hover:text-primary transition-colors"
                 >
-                  Hệ thống chi nhánh
+                  Giỏ hàng đặt món
                 </Link>
               </li>
               <li>
@@ -106,7 +107,7 @@ export function Footer() {
                 <p className="font-medium text-foreground">Thứ Hai - Chủ Nhật</p>
                 <p className="mt-0.5">10:00 - 22:00 hàng ngày</p>
                 <p className="mt-1 text-[11px] text-muted-foreground/80">
-                  (Nhận đơn Take Away đến 21:30)
+                  (Nhận đơn giao hàng đến 21:30)
                 </p>
               </div>
             </div>
@@ -121,15 +122,15 @@ export function Footer() {
               <div className="flex items-center gap-2">
                 <Phone className="size-4 shrink-0 text-primary" />
                 <a
-                  href={`tel:${SITE_CONFIG.hotlineTel}`}
+                  href={`tel:${contactPhoneTel}`}
                   className="font-medium text-foreground hover:text-primary transition-colors font-mono"
                 >
-                  {SITE_CONFIG.hotline}
+                  {contactPhone}
                 </a>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="size-4 shrink-0 text-primary mt-0.5" />
-                <span>Phục vụ tại các chi nhánh Hà Nội & TP. Hồ Chí Minh</span>
+                <span>Giao hàng tận nơi tại các chi nhánh khu vực TP. Hồ Chí Minh</span>
               </div>
             </div>
           </div>
