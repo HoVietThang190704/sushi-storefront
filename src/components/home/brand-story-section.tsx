@@ -65,7 +65,10 @@ export function BrandStorySection() {
   const [bottomCraftRef, isBottomCraftRevealed] = useScrollReveal(0.1);
 
   return (
-    <section className="relative overflow-hidden py-14 md:py-22 bg-background border-b border-border/60">
+    <section
+      id="brand-story"
+      className="relative overflow-hidden py-14 md:py-22 bg-background border-b border-border/60 scroll-mt-20"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* ===================== KHỐI TRÊN: TRIẾT LÝ & CÂU CHUYỆN ===================== */}
         <div

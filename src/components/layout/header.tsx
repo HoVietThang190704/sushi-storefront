@@ -83,7 +83,7 @@ export function Header() {
         !shouldShowHeader && "-translate-y-full md:translate-y-0"
       )}
     >
-      <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-18 sm:h-20 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* ===================== KHỐI TRÁI: LOGO ===================== */}
         <div className="flex items-center">
           <Link
@@ -91,22 +91,22 @@ export function Header() {
             className="group flex items-center transition-opacity hover:opacity-90"
             aria-label="Về trang chủ"
           >
-            <div className="relative flex h-10 w-36 sm:h-11 sm:w-48 md:w-52 items-center justify-start transition-transform group-hover:scale-105">
+            <div className="relative flex h-11 w-44 sm:h-13 sm:w-56 md:h-14 md:w-64 items-center justify-start transition-transform group-hover:scale-105">
               <Image
                 src="/images/logo.svg"
                 alt="Sushi Platform Logo"
-                width={208}
-                height={44}
+                width={280}
+                height={58}
                 priority
                 unoptimized
-                className="h-full w-auto max-h-10 sm:max-h-11 object-contain object-left"
+                className="h-full w-auto max-h-11 sm:max-h-13 md:max-h-14 object-contain object-left"
               />
             </div>
           </Link>
         </div>
 
         {/* ===================== KHỐI GIỮA: NAVIGATION (DESKTOP) ===================== */}
-        <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+        <nav className="hidden md:flex items-center gap-1.5 lg:gap-3">
           {NAV_ITEMS.map((item) => {
             const isActive =
               item.href === "/"
@@ -118,7 +118,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
+                  "relative rounded-lg px-4 py-2 text-[15px] lg:text-base font-medium transition-colors tracking-wide",
                   isActive
                     ? "text-primary font-semibold"
                     : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -126,7 +126,7 @@ export function Header() {
               >
                 {item.label}
                 {isActive && (
-                  <span className="absolute inset-x-3.5 -bottom-[19px] h-0.5 rounded-full bg-primary" />
+                  <span className="absolute inset-x-4 -bottom-[19px] sm:-bottom-[20px] h-0.5 rounded-full bg-primary" />
                 )}
               </Link>
             );
@@ -190,7 +190,7 @@ export function Header() {
           <ThemeToggle className="hidden sm:inline-flex size-9" />
 
           {/* Logo giỏ hàng (khi bật đặt món) HOẶC Nút gọi điện hotline (khi tắt đặt món) */}
-          {customerOrderingEnabled ? (
+          {!isMounted || customerOrderingEnabled ? (
             <Button
               variant="ghost"
               size="icon"
@@ -212,12 +212,15 @@ export function Header() {
             </Button>
           ) : (
             <a
-              href={`tel:${contactPhoneTel}`}
+              suppressHydrationWarning
+              href={`tel:${isMounted ? contactPhoneTel : "19006868"}`}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold transition-colors"
-              title={`Hotline đặt món: ${contactPhone}`}
+              title={`Hotline đặt món: ${isMounted ? contactPhone : "1900 6868"}`}
             >
               <Phone className="size-3.5" />
-              <span className="hidden sm:inline">Hotline: {contactPhone}</span>
+              <span className="hidden sm:inline">
+                Hotline: {isMounted ? contactPhone : "1900 6868"}
+              </span>
               <span className="sm:hidden">Gọi món</span>
             </a>
           )}
@@ -243,14 +246,14 @@ export function Header() {
               <SheetContent side="left" className="w-[85vw] max-w-xs p-6">
                 <SheetHeader className="p-0 text-left">
                   <div className="flex items-center justify-between pb-4 border-b border-border">
-                    <div className="relative flex h-10 w-40 items-center justify-start">
+                    <div className="relative flex h-11 w-48 items-center justify-start">
                       <Image
                         src="/images/logo.svg"
                         alt="Sushi Platform"
-                        width={160}
-                        height={40}
+                        width={220}
+                        height={46}
                         unoptimized
-                        className="h-full w-auto max-h-10 object-contain object-left"
+                        className="h-full w-auto max-h-11 object-contain object-left"
                       />
                     </div>
                     <SheetTitle className="sr-only">
@@ -276,7 +279,7 @@ export function Header() {
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                          "flex items-center gap-3 rounded-lg px-3.5 py-3 text-base font-medium transition-colors",
                           isActive
                             ? "bg-primary text-primary-foreground font-semibold"
                             : "text-foreground hover:bg-muted"

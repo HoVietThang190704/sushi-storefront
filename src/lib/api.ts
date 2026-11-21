@@ -335,11 +335,22 @@ export interface StorePaymentConfig {
   isActive: boolean;
 }
 
+export interface HeroBannerConfigItem {
+  id: string;
+  imageUrl: string;
+  leadTitle?: string;
+  highlightTitle?: string;
+  description?: string;
+  kanjiWatermark?: string;
+  isActive?: boolean;
+}
+
 export interface StoreConfig {
   id?: string;
   key?: string;
   customerOrderingEnabled: boolean;
   contactPhone: string;
+  heroBanners?: HeroBannerConfigItem[] | null;
 }
 
 export async function fetchPaymentConfig(): Promise<StorePaymentConfig | null> {

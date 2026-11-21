@@ -18,11 +18,13 @@ export function useStoreConfig() {
   const customerOrderingEnabled = query.data?.customerOrderingEnabled ?? true;
   const contactPhone = query.data?.contactPhone || SITE_CONFIG.hotline;
   const contactPhoneTel = contactPhone.replace(/\s+/g, "");
+  const heroBanners = query.data?.heroBanners ?? null;
 
   return {
     ...query,
     customerOrderingEnabled,
     contactPhone,
     contactPhoneTel,
+    heroBanners,
   };
 }

@@ -40,12 +40,12 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Cột 1: Thông tin thương hiệu */}
           <div className="space-y-4 md:col-span-1">
-            <div className="relative flex h-10 w-40 items-center justify-start">
+            <div className="relative flex h-11 w-48 items-center justify-start">
               <Image
                 src="/images/logo.svg"
                 alt="HANBI SUSHI"
-                width={160}
-                height={40}
+                width={220}
+                height={46}
                 unoptimized
                 className="h-full w-auto object-contain object-left"
               />
@@ -122,10 +122,11 @@ export function Footer() {
               <div className="flex items-center gap-2">
                 <Phone className="size-4 shrink-0 text-primary" />
                 <a
-                  href={`tel:${contactPhoneTel}`}
+                  suppressHydrationWarning
+                  href={`tel:${isMounted ? contactPhoneTel : "19006868"}`}
                   className="font-medium text-foreground hover:text-primary transition-colors font-mono"
                 >
-                  {contactPhone}
+                  {isMounted ? contactPhone : "1900 6868"}
                 </a>
               </div>
               <div className="flex items-start gap-2">
