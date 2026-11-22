@@ -453,7 +453,7 @@ export function MenuView() {
                           {product.name}
                         </h3>
                         {product.sku && (
-                          <p className="mt-0.5 text-[10px] font-mono text-muted-foreground/70">
+                          <p className="mt-1 text-xs sm:text-sm font-mono font-medium text-muted-foreground/80 tracking-wide">
                             {product.sku}
                           </p>
                         )}
