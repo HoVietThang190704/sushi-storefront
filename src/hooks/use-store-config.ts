@@ -19,6 +19,10 @@ export function useStoreConfig() {
   const contactPhone = query.data?.contactPhone || SITE_CONFIG.hotline;
   const contactPhoneTel = contactPhone.replace(/\s+/g, "");
   const heroBanners = query.data?.heroBanners ?? null;
+  const brandStory = query.data?.brandStory ?? null;
+  const curatedCategories = query.data?.curatedCategories ?? null;
+  const culinaryNews = query.data?.culinaryNews ?? null;
+  const footerConfig = query.data?.footerConfig ?? null;
 
   return {
     ...query,
@@ -26,5 +30,9 @@ export function useStoreConfig() {
     contactPhone,
     contactPhoneTel,
     heroBanners,
+    brandStory,
+    curatedCategories,
+    culinaryNews,
+    footerConfig,
   };
 }

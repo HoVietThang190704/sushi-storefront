@@ -1,7 +1,11 @@
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useStoreConfig } from "@/hooks/use-store-config";
 
 interface NewsItem {
   id: string;
@@ -46,6 +50,45 @@ const NEWS_LIST: NewsItem[] = [
 ];
 
 export function CulinaryNewsSection() {
+  const { culinaryNews } = useStoreConfig();
+
+  const isMounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  const displayNews = React.useMemo<NewsItem[]>(() => {
+    if (
+      !isMounted ||
+      !Array.isArray(culinaryNews) ||
+      culinaryNews.length === 0
+    ) {
+      return NEWS_LIST;
+    }
+
+    const activePosts = culinaryNews
+      .filter(
+        (item) =>
+          item.isActive !== false &&
+          item.title?.trim() &&
+          item.imageUrl?.trim() &&
+          (item.imageUrl.trim().startsWith("/") ||
+            item.imageUrl.trim().startsWith("http://") ||
+            item.imageUrl.trim().startsWith("https://"))
+      )
+      .map((item, idx) => ({
+        id: item.id || `news-${idx}`,
+        title: item.title.trim(),
+        date: item.date?.trim() || "",
+        tag: item.tag?.trim() || "Tin tức",
+        image: item.imageUrl.trim(),
+        summary: item.summary?.trim() || "",
+      }));
+
+    return activePosts.length > 0 ? activePosts : NEWS_LIST;
+  }, [culinaryNews, isMounted]);
+
   return (
     <section className="py-14 md:py-20 bg-background border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -72,9 +115,9 @@ export function CulinaryNewsSection() {
           </Button>
         </div>
 
-        {/* 3 Articles Grid */}
+        {/* Articles Grid */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {NEWS_LIST.map((post) => (
+          {displayNews.map((post) => (
             <article
               key={post.id}
               className="group flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card transition-all hover:border-primary/40 hover:shadow-md"

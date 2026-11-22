@@ -1,41 +1,17 @@
-export interface Category {
-  id: string;
-  name: string;
-  parentId: string | null;
-  children?: Category[];
-  _count?: {
-    products: number;
-  };
-}
+import type {
+  Category,
+  Product,
+  ApiResponse,
+  CreateOrderPayload,
+  WardLocationItem,
+  ShippingCalculationResult,
+  CreatedOrderResponse,
+  TrackOrderResponse,
+  StorePaymentConfig,
+  StoreConfig,
+} from "@/types/api.types";
 
-export interface Product {
-  id: string;
-  sku: string;
-  slug?: string | null;
-  barcode?: string | null;
-  name: string;
-  type: "SINGLE" | "COMBO";
-  categoryId: string | null;
-  sellingPrice: string | number;
-  imageUrl?: string | null;
-  isActive: boolean;
-  category?: {
-    id: string;
-    name: string;
-  } | null;
-  comboItemsAsParent?: Array<{
-    quantity: string | number;
-    childProduct: Product;
-  }>;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: T;
-  timestamp?: string;
-}
+export type * from "@/types/api.types";
 
 function getBaseUrl(): string {
   if (typeof window !== "undefined") {
@@ -113,56 +89,6 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
   return json.data || null;
 }
 
-export interface CreateOrderPayload {
-  customerName: string;
-  customerPhone: string;
-  customerEmail?: string;
-  address?: string;
-  province?: string;
-  district?: string;
-  ward?: string;
-  note?: string;
-  branchId?: string;
-  paymentMethod?: string;
-  items: Array<{
-    productId: string;
-    quantity: number;
-  }>;
-}
-
-export interface WardLocationItem {
-  district: string;
-  ward: string;
-  wardCode?: string;
-  formerWards?: string;
-  isSupported: boolean;
-  defaultBranch?: {
-    id: string;
-    code: string;
-    name: string;
-    address: string;
-  };
-  supportedBranches: Array<{
-    id: string;
-    code: string;
-    name: string;
-    fee: number;
-    isDefault: boolean;
-  }>;
-}
-
-export interface ShippingCalculationResult {
-  district?: string;
-  ward: string;
-  fee: number;
-  branch: {
-    id: string;
-    code: string;
-    name: string;
-    address: string;
-  };
-}
-
 export async function fetchShippingLocations(): Promise<WardLocationItem[]> {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/api/shipping/locations`, {
@@ -195,36 +121,6 @@ export async function calculateShippingFee(params: {
   return json.data;
 }
 
-export interface CreatedOrderResponse {
-  order: {
-    id: string;
-    code: string;
-    orderCode?: string;
-    customerName: string;
-    customerPhone: string;
-    address?: string;
-    district?: string;
-    ward?: string;
-    shippingFee?: string | number;
-    totalAmount: string | number;
-    status: string;
-    paymentStatus: string;
-    paymentMethod?: string;
-    paymentQrUrl?: string | null;
-    paymentBankInfo?: string | null;
-    createdAt: string;
-    items?: Array<{
-      id: string;
-      productName: string;
-      quantity: number;
-      unitPrice: string | number;
-      subtotal: string | number;
-    }>;
-  };
-  trackingToken: string | null;
-  isDuplicate?: boolean;
-}
-
 export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<CreatedOrderResponse> {
@@ -242,43 +138,6 @@ export async function createOrder(
     throw new Error(json.message || "Không thể tạo đơn hàng. Vui lòng thử lại.");
   }
   return json.data;
-}
-
-export interface TrackOrderResponse {
-  id: string;
-  code: string;
-  orderCode?: string;
-  customerName: string;
-  customerPhone: string;
-  customerEmail?: string | null;
-  address?: string | null;
-  district?: string | null;
-  ward?: string | null;
-  note?: string | null;
-  status: string;
-  paymentStatus: string;
-  paymentMethod: string;
-  paymentQrUrl?: string | null;
-  paymentBankInfo?: string | null;
-  shippingFee?: string | number;
-  totalAmount: string | number;
-  createdAt: string;
-  canCancel?: boolean;
-  trackingTicket?: string;
-  items?: Array<{
-    id: string;
-    productName: string;
-    unitPrice: string | number;
-    quantity: number;
-    subtotal: string | number;
-  }>;
-  statusHistories?: Array<{
-    id: string;
-    fromStatus: string | null;
-    toStatus: string;
-    reason?: string | null;
-    createdAt: string;
-  }>;
 }
 
 export async function trackOrder(
@@ -323,34 +182,6 @@ export async function cancelGuestOrder(
     throw new Error(json.message || "Không thể hủy đơn hàng.");
   }
   return { success: true };
-}
-
-export interface StorePaymentConfig {
-  bankName?: string | null;
-  accountNumber?: string | null;
-  accountHolder?: string | null;
-  qrImageUrl?: string | null;
-  transferSyntax?: string | null;
-  note?: string | null;
-  isActive: boolean;
-}
-
-export interface HeroBannerConfigItem {
-  id: string;
-  imageUrl: string;
-  leadTitle?: string;
-  highlightTitle?: string;
-  description?: string;
-  kanjiWatermark?: string;
-  isActive?: boolean;
-}
-
-export interface StoreConfig {
-  id?: string;
-  key?: string;
-  customerOrderingEnabled: boolean;
-  contactPhone: string;
-  heroBanners?: HeroBannerConfigItem[] | null;
 }
 
 export async function fetchPaymentConfig(): Promise<StorePaymentConfig | null> {

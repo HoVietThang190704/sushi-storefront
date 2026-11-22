@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
 import { useScrollReveal } from "@/hooks/use-scroll-reveal";
+import { useStoreConfig } from "@/hooks/use-store-config";
 import { cn } from "@/lib/utils";
 
 interface CategoryHighlight {
@@ -80,8 +81,56 @@ const CATEGORIES: CategoryHighlight[] = [
   },
 ];
 
+const DELAY_CLASSES = [
+  "delay-75",
+  "delay-100",
+  "delay-150",
+  "delay-200",
+  "delay-250",
+  "delay-300",
+];
+
 export function CuratedCategoriesSection() {
   const [sectionRef, isSectionRevealed] = useScrollReveal(0.1);
+  const { curatedCategories } = useStoreConfig();
+
+  const isMounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  const displayCategories = React.useMemo<CategoryHighlight[]>(() => {
+    if (
+      !isMounted ||
+      !Array.isArray(curatedCategories) ||
+      curatedCategories.length === 0
+    ) {
+      return CATEGORIES;
+    }
+
+    const activeItems = curatedCategories
+      .filter(
+        (item) =>
+          item.isActive !== false &&
+          item.title?.trim() &&
+          item.imageUrl?.trim() &&
+          (item.imageUrl.trim().startsWith("/") ||
+            item.imageUrl.trim().startsWith("http://") ||
+            item.imageUrl.trim().startsWith("https://"))
+      )
+      .map((item, idx) => ({
+        id: item.id || `cat-${idx}`,
+        title: item.title.trim(),
+        japanese: item.japanese?.trim() || "",
+        desc: item.desc?.trim() || "",
+        image: item.imageUrl.trim(),
+        targetCategory: item.targetCategory?.trim() || "",
+        delayClass: DELAY_CLASSES[idx % DELAY_CLASSES.length],
+      }));
+
+    return activeItems.length > 0 ? activeItems : CATEGORIES;
+  }, [curatedCategories, isMounted]);
 
   return (
     <section
@@ -121,9 +170,9 @@ export function CuratedCategoriesSection() {
           </Link>
         </div>
 
-        {/* 6 Category Tiles Grid (2 cols mobile, 2 cols tablet, 3 cols desktop) */}
+        {/* Category Tiles Grid (2 cols mobile, 2 cols tablet, 3 cols desktop) */}
         <div className="mt-6 sm:mt-8 grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-          {CATEGORIES.map((item) => (
+          {displayCategories.map((item) => (
             <Link
               key={item.id}
               href={`/menu?category=${encodeURIComponent(item.targetCategory || "")}`}
