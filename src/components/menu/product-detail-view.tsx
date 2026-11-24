@@ -11,7 +11,6 @@ import {
   ShoppingBag,
   Utensils,
   Check,
-  Layers,
   Phone,
 } from "lucide-react";
 import { useStoreConfig } from "@/hooks/use-store-config";
@@ -84,9 +83,6 @@ export function ProductDetailView({
       description: `Tổng: ${formatPrice(totalPrice)} • Giao tận nơi TP.HCM`,
     });
   };
-
-  const isCombo = product.type === "COMBO";
-  const comboItems = product.comboItemsAsParent || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-32 lg:pb-24">
@@ -181,12 +177,6 @@ export function ProductDetailView({
                     {product.category.name}
                   </Badge>
                 )}
-                {isCombo && (
-                  <Badge className="bg-amber-500 text-white border-0 shadow-2xs text-xs px-2.5 py-0.5 font-semibold flex items-center gap-1">
-                    <Layers className="size-3" />
-                    <span>Combo</span>
-                  </Badge>
-                )}
               </div>
             </div>
           </div>
@@ -220,36 +210,6 @@ export function ProductDetailView({
                   )}
                 </div>
               </div>
-
-              {/* Chi tiết Combo nếu là COMBO */}
-              {isCombo && comboItems.length > 0 && (
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-                    <Layers className="size-4" />
-                    <span>Các món thành phần trong set combo ({comboItems.length} món)</span>
-                  </div>
-                  <ul className="divide-y divide-border/40 text-sm">
-                    {comboItems.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className="py-2.5 flex items-center justify-between first:pt-1 last:pb-1"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="size-5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center">
-                            {idx + 1}
-                          </span>
-                          <span className="font-medium text-foreground">
-                            {item.childProduct?.name || "Món ăn kèm"}
-                          </span>
-                        </div>
-                        <span className="text-xs font-mono font-semibold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">
-                          x{item.quantity?.toString() || 1}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
 
               {/* Giới thiệu hương vị & Gia vị ăn kèm (Cấu hình động từ Admin) */}
               <div className="space-y-2.5 text-sm text-muted-foreground leading-relaxed">

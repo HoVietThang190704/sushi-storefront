@@ -18,7 +18,6 @@ import {
   UtensilsCrossed,
   RotateCw,
   Search,
-  Sparkles,
   ChevronRight,
   ChevronLeft,
   Home as HomeIcon,
@@ -460,12 +459,6 @@ export function MenuView() {
 
                         {/* Badges trên ảnh */}
                         <div className="absolute left-2 top-2 sm:left-3 sm:top-3 flex flex-wrap gap-1 sm:gap-1.5 z-10">
-                          {product.type === "COMBO" && (
-                            <Badge className="bg-amber-500 text-white font-bold text-[9px] sm:text-[11px] px-1.5 py-0.2 sm:px-2.5 sm:py-0.5 rounded-full shadow-xs border-none flex items-center gap-1">
-                              <Sparkles className="size-2.5 sm:size-3" />
-                              <span>Combo</span>
-                            </Badge>
-                          )}
                           {product.category?.name && (
                             <Badge
                               variant="secondary"
