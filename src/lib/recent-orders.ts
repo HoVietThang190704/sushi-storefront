@@ -52,6 +52,25 @@ export function saveRecentOrder(newOrder: RecentOrderLocal): void {
 }
 
 /**
+ * Xóa một mã đơn hàng không còn tồn tại khỏi lịch sử localStorage
+ */
+export function removeRecentOrder(code: string): void {
+  if (typeof window === "undefined" || !code.trim()) return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const list: RecentOrderLocal[] = JSON.parse(raw);
+    if (!Array.isArray(list)) return;
+    const target = code.trim().toUpperCase();
+    const updated = list.filter((o) => o.code.toUpperCase() !== target);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event(CUSTOM_EVENT_NAME));
+  } catch (err) {
+    console.warn("Could not remove recent order from localStorage", err);
+  }
+}
+
+/**
  * Tìm trackingToken đã lưu trên trình duyệt theo mã đơn hàng
  */
 export function getRecentOrderToken(code: string): string | undefined {

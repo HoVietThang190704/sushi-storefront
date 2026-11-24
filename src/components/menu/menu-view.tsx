@@ -14,10 +14,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Plus,
+  Minus,
   UtensilsCrossed,
   RotateCw,
   Search,
-  Check,
   Sparkles,
   ChevronRight,
   ChevronLeft,
@@ -61,7 +61,11 @@ export function MenuView() {
   const [internalCategoryId, setInternalCategoryId] = React.useState<string | null | undefined>(undefined);
   const [internalSearchQuery, setInternalSearchQuery] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [addedProductId, setAddedProductId] = React.useState<string | null>(null);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Tính toán category được chọn từ URL hoặc từ state nội bộ khi người dùng click
   const selectedCategoryId = React.useMemo(() => {
@@ -87,16 +91,35 @@ export function MenuView() {
   const searchQuery =
     internalSearchQuery !== null ? internalSearchQuery : urlSearchParam || "";
 
+  const cartItems = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+
+  const cartQuantityMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    if (!isMounted) return map;
+    for (const item of cartItems) {
+      map.set(item.id, item.quantity);
+    }
+    return map;
+  }, [cartItems, isMounted]);
+
+  const categoryOrderMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    categories.forEach((cat, idx) => {
+      map.set(cat.id, cat.sortOrder ?? idx);
+    });
+    return map;
+  }, [categories]);
 
   const handleRetry = () => {
     refetchCategories();
     refetchProducts();
   };
 
-  // Lọc sản phẩm theo danh mục và từ khóa tìm kiếm
+  // Lọc và sắp xếp sản phẩm theo đúng thứ tự danh mục mà chủ quán đã cấu hình
   const filteredProducts = React.useMemo(() => {
-    return products.filter((p) => {
+    const filtered = products.filter((p) => {
       // Lọc danh mục
       if (selectedCategoryId && p.categoryId !== selectedCategoryId) {
         return false;
@@ -111,7 +134,17 @@ export function MenuView() {
       }
       return true;
     });
-  }, [products, selectedCategoryId, searchQuery]);
+
+    if (!selectedCategoryId && categoryOrderMap.size > 0) {
+      return [...filtered].sort((a, b) => {
+        const orderA = a.categoryId ? (categoryOrderMap.get(a.categoryId) ?? 9999) : 9999;
+        const orderB = b.categoryId ? (categoryOrderMap.get(b.categoryId) ?? 9999) : 9999;
+        return orderA - orderB;
+      });
+    }
+
+    return filtered;
+  }, [products, selectedCategoryId, searchQuery, categoryOrderMap]);
 
   const totalItems = filteredProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
@@ -160,11 +193,6 @@ export function MenuView() {
       price: priceNum,
       imageUrl: product.imageUrl || undefined,
     });
-
-    setAddedProductId(product.id);
-    setTimeout(() => {
-      setAddedProductId((prev) => (prev === product.id ? null : prev));
-    }, 1200);
 
     toast.success(`Đã thêm "${product.name}" vào giỏ hàng`, {
       description: `${formatPrice(product.sellingPrice)} • Giao tận nơi TP.HCM`,
@@ -260,55 +288,57 @@ export function MenuView() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-        {/* ==================== THANH LỌC DANH MỤC (PILLS CUỘN NGANG) ==================== */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 no-scrollbar border-b border-border/50">
-          <Button
-            size="sm"
-            variant={selectedCategoryId === null ? "default" : "secondary"}
-            onClick={() => handleCategorySelect(null)}
-            className="rounded-full text-xs font-semibold px-4 shrink-0 transition-all shadow-2xs border border-transparent hover:border-border/60"
-          >
-            <span>Tất cả món</span>
-            {!isLoading && (
-              <span
-                className={`ml-1.5 rounded-full px-1.5 py-0.2 text-[10px] ${
-                  selectedCategoryId === null
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-muted-foreground/15 text-muted-foreground"
-                }`}
-              >
-                {products.length}
-              </span>
-            )}
-          </Button>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-3 sm:pt-6">
+        {/* ==================== THANH LỌC DANH MỤC (STICKY PILLS CUỘN NGANG) ==================== */}
+        <div className="sticky top-0 sm:top-20 z-30 -mx-4 px-4 sm:mx-0 sm:px-0 bg-background/95 backdrop-blur-md border-b border-border/50 py-2.5">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <Button
+              size="sm"
+              variant={selectedCategoryId === null ? "default" : "secondary"}
+              onClick={() => handleCategorySelect(null)}
+              className="rounded-full text-xs font-semibold px-4 shrink-0 transition-all shadow-2xs border border-transparent hover:border-border/60"
+            >
+              <span>Tất cả món</span>
+              {!isLoading && (
+                <span
+                  className={`ml-1.5 rounded-full px-1.5 py-0.2 text-[10px] ${
+                    selectedCategoryId === null
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted-foreground/15 text-muted-foreground"
+                  }`}
+                >
+                  {products.length}
+                </span>
+              )}
+            </Button>
 
-          {categories.map((cat) => {
-            const isSelected = selectedCategoryId === cat.id;
-            const count = products.filter((p) => p.categoryId === cat.id).length;
-            return (
-              <Button
-                key={cat.id}
-                size="sm"
-                variant={isSelected ? "default" : "secondary"}
-                onClick={() => handleCategorySelect(cat.id)}
-                className="rounded-full text-xs font-semibold px-4 shrink-0 transition-all shadow-2xs border border-transparent hover:border-border/60"
-              >
-                <span>{cat.name}</span>
-                {count > 0 && (
-                  <span
-                    className={`ml-1.5 rounded-full px-1.5 py-0.2 text-[10px] ${
-                      isSelected
-                        ? "bg-primary-foreground/20 text-primary-foreground"
-                        : "bg-muted-foreground/15 text-muted-foreground"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                )}
-              </Button>
-            );
-          })}
+            {categories.map((cat) => {
+              const isSelected = selectedCategoryId === cat.id;
+              const count = products.filter((p) => p.categoryId === cat.id).length;
+              return (
+                <Button
+                  key={cat.id}
+                  size="sm"
+                  variant={isSelected ? "default" : "secondary"}
+                  onClick={() => handleCategorySelect(cat.id)}
+                  className="rounded-full text-xs font-semibold px-4 shrink-0 transition-all shadow-2xs border border-transparent hover:border-border/60"
+                >
+                  <span>{cat.name}</span>
+                  {count > 0 && (
+                    <span
+                      className={`ml-1.5 rounded-full px-1.5 py-0.2 text-[10px] ${
+                        isSelected
+                          ? "bg-primary-foreground/20 text-primary-foreground"
+                          : "bg-muted-foreground/15 text-muted-foreground"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Thanh trạng thái bộ lọc (nếu có lọc tìm kiếm hoặc danh mục) */}
@@ -381,7 +411,7 @@ export function MenuView() {
               className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 scroll-mt-24"
             >
               {paginatedProducts.map((product, index) => {
-              const isAdded = addedProductId === product.id;
+              const inCartQty = cartQuantityMap.get(product.id) || 0;
               const hasImage = Boolean(product.imageUrl);
 
               return (
@@ -453,7 +483,7 @@ export function MenuView() {
                           {product.name}
                         </h3>
                         {product.sku && (
-                          <p className="mt-1 text-xs sm:text-sm font-mono font-medium text-muted-foreground/80 tracking-wide">
+                          <p className="mt-1 text-[11px] sm:text-xs font-sans font-medium text-muted-foreground/85 line-clamp-2 leading-relaxed">
                             {product.sku}
                           </p>
                         )}
@@ -461,39 +491,53 @@ export function MenuView() {
                     </Link>
                   </div>
 
-                  {/* Giá và nút Thêm vào giỏ */}
+                  {/* Giá và nút Thêm vào giỏ / Tăng giảm số lượng */}
                   <div className="p-3 sm:p-5 pt-0">
                     <div className="flex items-center justify-between gap-1.5 border-t border-border/50 pt-2.5 sm:pt-3">
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <span className="hidden sm:inline text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Giá món
                         </span>
-                        <span className="text-xs sm:text-base lg:text-lg font-extrabold text-primary tracking-tight truncate">
+                        <span className="text-sm sm:text-base lg:text-lg font-extrabold text-primary tracking-tight truncate">
                           {formatPrice(product.sellingPrice)}
                         </span>
                       </div>
 
                       {customerOrderingEnabled ? (
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddToCart(product)}
-                          className="h-8 sm:h-9.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-semibold gap-1 shrink-0 transition-all shadow-xs hover:shadow-md active:scale-95"
-                          variant={isAdded ? "outline" : "default"}
-                          aria-label={`Thêm ${product.name} vào giỏ hàng`}
-                        >
-                          {isAdded ? (
-                            <>
-                              <Check className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
-                              <span className="text-[11px] sm:text-xs">Đã thêm</span>
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="size-3.5 sm:size-4 stroke-[2.5]" />
-                              <span className="text-[11px] sm:text-xs">Chọn</span>
-                              <span className="hidden sm:inline text-xs">món</span>
-                            </>
-                          )}
-                        </Button>
+                        inCartQty > 0 ? (
+                          <div className="inline-flex items-center rounded-lg sm:rounded-xl border border-primary/40 bg-primary/10 p-0.5 shrink-0 shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(product.id, inCartQty - 1)}
+                              className="size-7 sm:size-8 rounded-md sm:rounded-lg flex items-center justify-center text-primary hover:bg-primary/20 active:scale-90 transition-all cursor-pointer"
+                              aria-label={`Giảm số lượng ${product.name}`}
+                            >
+                              <Minus className="size-3.5 stroke-[2.5]" />
+                            </button>
+                            <span className="min-w-6 sm:min-w-7 text-center text-xs sm:text-sm font-bold font-mono text-foreground px-1">
+                              {inCartQty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(product)}
+                              className="size-7 sm:size-8 rounded-md sm:rounded-lg flex items-center justify-center bg-primary text-primary-foreground hover:brightness-110 active:scale-90 transition-all cursor-pointer shadow-2xs"
+                              aria-label={`Thêm ${product.name}`}
+                            >
+                              <Plus className="size-3.5 stroke-[2.5]" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddToCart(product)}
+                            className="h-8 sm:h-9.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-semibold gap-1 shrink-0 transition-all shadow-xs hover:shadow-md active:scale-95"
+                            aria-label={`Thêm ${product.name} vào giỏ hàng`}
+                          >
+                            <Plus className="size-3.5 sm:size-4 stroke-[2.5]" />
+                            <span className="text-[11px] sm:text-xs">Chọn</span>
+                            <span className="hidden sm:inline text-xs">món</span>
+                          </Button>
+                        )
                       ) : (
                         <Button
                           size="sm"

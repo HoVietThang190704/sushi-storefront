@@ -5,11 +5,10 @@ import Link from "next/link";
 import {
   HomeIcon,
   ChevronRight,
-  ArrowLeft,
+  ChevronLeft,
   Plus,
   Minus,
   ShoppingBag,
-  Sparkles,
   Utensils,
   Check,
   Layers,
@@ -18,6 +17,7 @@ import {
 import { useStoreConfig } from "@/hooks/use-store-config";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Product, formatPrice, parsePrice } from "@/lib/api";
+import { useProducts } from "@/hooks/use-queries";
 import { useCartStore } from "@/lib/cart-store";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,14 +30,34 @@ interface ProductDetailViewProps {
 }
 
 export function ProductDetailView({
-  product,
+  product: initialProduct,
   relatedProducts,
 }: ProductDetailViewProps) {
   const [quantity, setQuantity] = React.useState(1);
   const [isAdded, setIsAdded] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Tự động đồng bộ dữ liệu món ăn theo thời gian thực khi Admin chỉnh sửa (tên, giá, kèm theo, mô tả)
+  const { data: allProducts } = useProducts();
+  const product = React.useMemo(() => {
+    const live = allProducts?.find((p) => p.id === initialProduct.id);
+    if (!live) return initialProduct;
+    return {
+      ...initialProduct,
+      ...live,
+      comboItemsAsParent:
+        live.comboItemsAsParent ?? initialProduct.comboItemsAsParent,
+    };
+  }, [allProducts, initialProduct]);
+
   const { customerOrderingEnabled, contactPhone, contactPhoneTel } =
     useStoreConfig();
   const addItem = useCartStore((state) => state.addItem);
+  const totalCartItems = useCartStore((state) => state.totalItems());
 
   const unitPrice = parsePrice(product.sellingPrice);
   const totalPrice = unitPrice * quantity;
@@ -107,25 +127,42 @@ export function ProductDetailView({
         </div>
       </div>
 
-      {/* ==================== COMPACT BACK BUTTON (MOBILE) ==================== */}
-      <div className="sm:hidden px-4 pt-3 pb-1">
+      {/* ==================== APP-LIKE TOP BAR (MOBILE) ==================== */}
+      <div className="sm:hidden border-b border-border/70 bg-card/95 backdrop-blur-md px-3 h-14 sticky top-0 z-40 flex items-center justify-between gap-2">
         <Link
           href={product.category ? `/menu?category=${product.category.id}` : "/menu"}
-          className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-muted/60 hover:bg-muted text-xs font-semibold text-foreground transition-all active:scale-95 border border-border/60 shadow-2xs"
+          className="size-10 flex items-center justify-center -ml-1 text-foreground/80 hover:text-foreground active:scale-90 transition-all rounded-full shrink-0"
+          aria-label="Quay lại thực đơn"
         >
-          <ArrowLeft className="size-3.5 text-primary" />
-          <span className="truncate max-w-[260px]">
-            Quay lại {product.category?.name || "thực đơn"}
-          </span>
+          <ChevronLeft className="size-6 stroke-[2]" />
         </Link>
+        <h1 className="font-semibold text-sm text-foreground tracking-tight truncate select-none">
+          {product.name}
+        </h1>
+        <div className="size-10 flex items-center justify-center -mr-1 shrink-0">
+          {customerOrderingEnabled && (
+            <Link
+              href="/cart"
+              className="relative size-9 flex items-center justify-center text-foreground/80 hover:text-foreground transition-colors"
+              aria-label="Giỏ hàng"
+            >
+              <ShoppingBag className="size-5" />
+              {isMounted && totalCartItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                  {totalCartItems > 99 ? "99+" : totalCartItems}
+                </span>
+              )}
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* ==================== MAIN PRODUCT SECTION ==================== */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-3 sm:pt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
           {/* CỘT TRÁI: KHUNG ẢNH MÓN ĂN */}
           <div className="lg:col-span-6">
-            <div className="relative aspect-[4/3] sm:aspect-square w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-border/80 bg-card shadow-lg dark:shadow-2xl">
+            <div className="relative aspect-[4/3] sm:aspect-square w-full overflow-hidden rounded-2xl border border-border/70 bg-card">
               <SafeImage
                 src={product.imageUrl || "/images/placeholder-dish.svg"}
                 alt={product.name}
@@ -138,63 +175,50 @@ export function ProductDetailView({
               />
 
               {/* Badges trên ảnh */}
-              <div className="absolute top-4 left-4 flex flex-wrap gap-2 pointer-events-none">
+              <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 pointer-events-none">
                 {product.category && (
-                  <Badge className="bg-background/90 backdrop-blur-md text-foreground border border-border/60 shadow-sm text-xs px-3 py-1 font-medium">
+                  <Badge className="bg-background/90 backdrop-blur-md text-foreground border border-border/60 shadow-2xs text-xs px-2.5 py-0.5 font-medium">
                     {product.category.name}
                   </Badge>
                 )}
-                {isCombo ? (
-                  <Badge className="bg-amber-500 text-white border-0 shadow-sm text-xs px-3 py-1 font-semibold flex items-center gap-1">
+                {isCombo && (
+                  <Badge className="bg-amber-500 text-white border-0 shadow-2xs text-xs px-2.5 py-0.5 font-semibold flex items-center gap-1">
                     <Layers className="size-3" />
-                    <span>Set Combo</span>
-                  </Badge>
-                ) : (
-                  <Badge className="bg-primary/95 text-primary-foreground border-0 shadow-sm text-xs px-3 py-1 font-semibold flex items-center gap-1">
-                    <Sparkles className="size-3" />
-                    <span>Món Tươi Mới</span>
+                    <span>Combo</span>
                   </Badge>
                 )}
               </div>
-
-              {/* Gradient che mờ chân ảnh */}
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
             </div>
           </div>
 
           {/* CỘT PHẢI: THÔNG TIN CHI TIẾT & ĐẶT MÓN */}
           <div className="lg:col-span-6 flex flex-col justify-between">
-            <div className="space-y-6">
-              {/* Tên món */}
-              <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif text-foreground tracking-tight">
+            <div className="space-y-5">
+              {/* Tên món & Giá bán phẳng, tinh gọn */}
+              <div className="pb-4 border-b border-border/60">
+                <h1 className="text-xl sm:text-3xl font-bold font-serif text-foreground tracking-tight">
                   {product.name}
                 </h1>
-                <p className="mt-1 text-xs sm:text-sm text-primary dark:text-red-400 font-medium tracking-wide">
-                  HANBI SIGNATURE SUSHI • 厳選江戸前寿司
-                </p>
-              </div>
+                {product.sku && (
+                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground font-medium">
+                    {product.sku}
+                  </p>
+                )}
 
-              {/* Giá bán */}
-              <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 flex items-baseline justify-between">
-                <div>
-                  <span className="text-xs text-muted-foreground block mb-0.5">
-                    Đơn giá niêm yết
-                  </span>
-                  <span className="text-2xl sm:text-3xl font-extrabold text-primary font-mono tracking-tight">
+                <div className="mt-3 flex items-baseline gap-3">
+                  <span className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
                     {formatPrice(unitPrice)}
                   </span>
+                  {quantity > 1 && (
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      (Tạm tính {quantity} phần:{" "}
+                      <strong className="text-foreground font-semibold">
+                        {formatPrice(totalPrice)}
+                      </strong>
+                      )
+                    </span>
+                  )}
                 </div>
-                {quantity > 1 && (
-                  <div className="text-right">
-                    <span className="text-xs text-muted-foreground block mb-0.5">
-                      Tổng tạm tính ({quantity} phần)
-                    </span>
-                    <span className="text-lg sm:text-xl font-bold text-foreground font-mono">
-                      {formatPrice(totalPrice)}
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Chi tiết Combo nếu là COMBO */}
@@ -227,15 +251,19 @@ export function ProductDetailView({
                 </div>
               )}
 
-              {/* Giới thiệu hương vị chuẩn Nhật */}
-              <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+              {/* Giới thiệu hương vị & Gia vị ăn kèm (Cấu hình động từ Admin) */}
+              <div className="space-y-2.5 text-sm text-muted-foreground leading-relaxed">
                 <p>
-                  Món ăn được chế biến thủ công bởi các đầu bếp lành nghề tại Hanbi Sushi theo phong cách truyền thống Nhật Bản. Nguồn hải sản được kiểm định nghiêm ngặt về độ tươi ngon, kết hợp cùng giấm gạo đỏ ủ hạt cơm dẻo và wasabi tươi nguyên chất.
+                  {product.description?.trim()
+                    ? product.description
+                    : "Món ăn được chế biến thủ công bởi các đầu bếp lành nghề tại Hanbi Sushi theo phong cách truyền thống Nhật Bản. Nguồn hải sản được kiểm định nghiêm ngặt về độ tươi ngon, kết hợp cùng giấm gạo đỏ ủ hạt cơm dẻo và wasabi tươi nguyên chất."}
                 </p>
-                <div className="flex items-center gap-2 pt-1 text-xs text-foreground/80">
-                  <Utensils className="size-3.5 text-primary" />
-                  <span>Kèm theo: Gừng hồng chua ngọt Gari, nước tương Nhật Kikkoman & Wasabi tươi.</span>
-                </div>
+                {product.accompaniments && product.accompaniments.trim() !== "" && (
+                  <div className="flex items-start gap-2 pt-1 text-xs text-foreground/85">
+                    <Utensils className="size-3.5 text-primary shrink-0 mt-0.5" />
+                    <span>Kèm theo: {product.accompaniments.trim()}</span>
+                  </div>
+                )}
               </div>
 
               {/* Bộ chọn số lượng & Nút Thêm vào giỏ (Hiển thị trên Desktop) */}
@@ -333,16 +361,11 @@ export function ProductDetailView({
 
         {/* ==================== MÓN ĂN GỢI Ý LIÊN QUAN ==================== */}
         {relatedProducts.length > 0 && (
-          <div className="mt-20 pt-12 border-t border-border/70">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <span className="text-xs uppercase font-semibold tracking-widest text-primary dark:text-red-400 block mb-1">
-                  GỢI Ý MÓN ĂN KÈM • おすすめ
-                </span>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-serif text-foreground">
-                  Món Ăn Cùng Danh Mục
-                </h2>
-              </div>
+          <div className="mt-12 sm:mt-16 pt-8 sm:pt-10 border-t border-border/60">
+            <div className="flex items-center justify-between mb-5 sm:mb-6">
+              <h2 className="text-lg sm:text-2xl font-bold font-serif text-foreground">
+                Món cùng danh mục
+              </h2>
               <Link
                 href="/menu"
                 className="text-xs sm:text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
@@ -352,7 +375,7 @@ export function ProductDetailView({
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
               {relatedProducts.slice(0, 4).map((rel) => {
                 const relPrice = parsePrice(rel.sellingPrice);
                 const relSlug = rel.slug || rel.id;
@@ -361,7 +384,7 @@ export function ProductDetailView({
                   <Link
                     key={rel.id}
                     href={`/menu/${relSlug}`}
-                    className="group flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:border-primary/40 hover:-translate-y-1 transition-all duration-300"
+                    className="group flex flex-col justify-between overflow-hidden rounded-xl sm:rounded-2xl border border-border/70 bg-card hover:border-primary/40 transition-all duration-200"
                   >
                     <div>
                       <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30">
@@ -370,26 +393,25 @@ export function ProductDetailView({
                           alt={rel.name}
                           fill
                           sizes="(max-width: 640px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                           fallbackSrc="/images/placeholder-dish.svg"
                           fallbackText={rel.name}
                         />
                       </div>
-                      <div className="p-3 sm:p-4">
-                        <span className="text-[10px] text-muted-foreground uppercase font-mono block mb-1">
-                          {rel.sku}
-                        </span>
+                      <div className="p-3 sm:p-4 pb-2">
                         <h3 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                           {rel.name}
                         </h3>
+                        {rel.sku && (
+                          <span className="text-[11px] text-muted-foreground font-sans line-clamp-1 block mt-0.5">
+                            {rel.sku}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div className="p-3 sm:p-4 pt-0 flex items-center justify-between">
-                      <span className="font-bold text-xs sm:text-sm text-primary font-mono">
+                    <div className="p-3 sm:p-4 pt-1 flex items-center justify-between">
+                      <span className="font-bold text-xs sm:text-sm text-primary">
                         {formatPrice(relPrice)}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground font-medium group-hover:text-foreground transition-colors">
-                        Chi tiết &rarr;
                       </span>
                     </div>
                   </Link>

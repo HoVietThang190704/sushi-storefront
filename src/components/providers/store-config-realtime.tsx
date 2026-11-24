@@ -60,11 +60,20 @@ export function StoreConfigRealtime() {
       prevEnabledRef.current = newEnabled;
     };
 
+    const handleCatalogUpdate = () => {
+      void queryClient.invalidateQueries({ queryKey: ["catalog"] });
+    };
+
     socket.on("store-config:updated", handleUpdate);
-    socket.on("connect", () => void handleUpdate());
+    socket.on("catalog:updated", handleCatalogUpdate);
+    socket.on("connect", () => {
+      void handleUpdate();
+      handleCatalogUpdate();
+    });
 
     return () => {
       socket.off("store-config:updated", handleUpdate);
+      socket.off("catalog:updated", handleCatalogUpdate);
       socket.off("connect");
       socket.disconnect();
     };

@@ -52,7 +52,7 @@ export function formatPrice(amount: number | string): string {
 export async function fetchCategories(): Promise<Category[]> {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/api/catalog/categories`, {
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch categories: ${res.statusText}`);
@@ -67,7 +67,7 @@ export async function fetchProducts(categoryId?: string): Promise<Product[]> {
     ? `/api/catalog/products?categoryId=${encodeURIComponent(categoryId)}`
     : "/api/catalog/products";
   const res = await fetch(`${baseUrl}${path}`, {
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch products: ${res.statusText}`);
@@ -79,7 +79,7 @@ export async function fetchProducts(categoryId?: string): Promise<Product[]> {
 export async function fetchProductBySlug(slug: string): Promise<Product | null> {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/api/catalog/products/${encodeURIComponent(slug)}`, {
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
   if (!res.ok) {
     if (res.status === 404) return null;

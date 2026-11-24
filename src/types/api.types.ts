@@ -1,6 +1,7 @@
 export interface Category {
   id: string;
   name: string;
+  sortOrder?: number;
   parentId: string | null;
   children?: Category[];
   _count?: {
@@ -18,6 +19,8 @@ export interface Product {
   categoryId: string | null;
   sellingPrice: string | number;
   imageUrl?: string | null;
+  description?: string | null;
+  accompaniments?: string | null;
   isActive: boolean;
   category?: {
     id: string;

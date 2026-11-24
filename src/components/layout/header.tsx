@@ -13,8 +13,10 @@ import {
   UtensilsCrossed,
   Home as HomeIcon,
   Package,
-  ChevronRight,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { AccountDropdown } from "@/components/layout/account-dropdown";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCartStore } from "@/lib/cart-store";
+import { useRecentOrders } from "@/lib/recent-orders";
 import { useStoreConfig } from "@/hooks/use-store-config";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { cn } from "@/lib/utils";
@@ -57,6 +60,9 @@ export function Header() {
     useStoreConfig();
 
   const totalItems = useCartStore((state) => state.totalItems());
+  const recentOrders = useRecentOrders();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const currentTheme = isMounted ? (theme === "system" ? resolvedTheme : theme) : "dark";
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +74,8 @@ export function Header() {
   const isMinimalMobile =
     pathname === "/cart" ||
     pathname === "/checkout" ||
-    pathname === "/order-success";
+    pathname === "/order-success" ||
+    (pathname.startsWith("/menu/") && pathname !== "/menu");
 
   // Theo dõi hướng cuộn trang để tự động ẩn Header khi cuộn xuống và hiện lại khi cuộn lên trên mobile
   const isScrollVisible = useScrollDirection({ threshold: 12 });
@@ -243,89 +250,123 @@ export function Header() {
                   <MenuIcon className="size-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] max-w-xs p-6">
-                <SheetHeader className="p-0 text-left">
-                  <div className="flex items-center justify-between pb-4 border-b border-border">
-                    <div className="relative flex h-11 w-48 items-center justify-start">
-                      <Image
-                        src="/images/logo.svg"
-                        alt="Sushi Platform"
-                        width={220}
-                        height={46}
-                        unoptimized
-                        className="h-full w-auto max-h-11 object-contain object-left"
-                      />
+              <SheetContent
+                side="left"
+                className="w-[82vw] max-w-xs p-0 flex flex-col justify-between"
+              >
+                {/* Phần đầu Drawer: Logo + Danh sách điều hướng */}
+                <div className="p-5">
+                  <SheetHeader className="p-0 text-left">
+                    <div className="flex items-center justify-between pb-4 pr-6 border-b border-border/70">
+                      <div className="relative flex h-10 w-44 items-center justify-start">
+                        <Image
+                          src="/images/logo.svg"
+                          alt="Sushi Platform"
+                          width={220}
+                          height={46}
+                          unoptimized
+                          className="h-full w-auto max-h-10 object-contain object-left"
+                        />
+                      </div>
+                      <SheetTitle className="sr-only">
+                        Menu Điều Hướng
+                      </SheetTitle>
                     </div>
-                    <SheetTitle className="sr-only">
-                      Menu Điều Hướng
-                    </SheetTitle>
-                  </div>
-                </SheetHeader>
+                  </SheetHeader>
 
-                <div className="mt-6 flex flex-col gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3">
-                    Điều hướng
-                  </span>
-                  {NAV_ITEMS.map((item) => {
-                    const Icon = item.icon;
-                    const isActive =
-                      item.href === "/"
-                        ? pathname === "/"
-                        : !item.href.startsWith("#") && pathname.startsWith(item.href);
+                  <nav className="mt-5 flex flex-col gap-1">
+                    {NAV_ITEMS.map((item) => {
+                      const Icon = item.icon;
+                      const isActive =
+                        item.href === "/"
+                          ? pathname === "/"
+                          : !item.href.startsWith("#") &&
+                            pathname.startsWith(item.href);
+                      const isTrackOrder = item.href === "/track-order";
 
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg px-3.5 py-3 text-base font-medium transition-colors",
-                          isActive
-                            ? "bg-primary text-primary-foreground font-semibold"
-                            : "text-foreground hover:bg-muted"
-                        )}
-                      >
-                        <Icon className="size-4 shrink-0" />
-                        <span>{item.label}</span>
-                      </Link>
-                    );
-                  })}
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-primary text-primary-foreground font-semibold"
+                              : "text-foreground/90 hover:bg-muted hover:text-foreground"
+                          )}
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon className="size-4 shrink-0" />
+                            <span>{item.label}</span>
+                          </span>
+                          {isTrackOrder && isMounted && recentOrders.length > 0 && (
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-[11px] font-semibold",
+                                isActive
+                                  ? "bg-primary-foreground/20 text-primary-foreground"
+                                  : "bg-muted text-muted-foreground"
+                              )}
+                            >
+                              {recentOrders.length}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </nav>
                 </div>
 
-                <div className="mt-8 border-t border-border pt-6 flex flex-col gap-3">
-                  {/* Card Đơn mua của tôi trên Mobile */}
-                  <Link
-                    href="/track-order"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between rounded-xl border border-border/80 bg-muted/40 p-3 hover:bg-muted text-foreground transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                        <Package className="size-4" />
-                      </div>
-                      <div className="text-left">
-                        <span className="text-xs font-semibold block">Đơn mua của tôi</span>
-                        <span className="text-[10px] text-muted-foreground block">
-                          Kiểm tra tiến độ đơn giao tận nơi
-                        </span>
-                      </div>
+                {/* Phần đáy Drawer: Chỉ để Chuyển giao diện & Hotline tinh gọn */}
+                <div className="p-5 pt-4 border-t border-border/70 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Giao diện
+                    </span>
+                    <div className="inline-flex items-center rounded-lg bg-muted p-0.5 border border-border/60">
+                      <button
+                        type="button"
+                        onClick={() => setTheme("light")}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer",
+                          currentTheme === "light"
+                            ? "bg-background text-foreground shadow-2xs font-semibold"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Sun className="size-3.5" />
+                        <span>Sáng</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTheme("dark")}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer",
+                          currentTheme === "dark"
+                            ? "bg-background text-foreground shadow-2xs font-semibold"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Moon className="size-3.5" />
+                        <span>Tối</span>
+                      </button>
                     </div>
-                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-0.5" />
-                  </Link>
-
-                  <div className="flex items-center justify-between rounded-lg bg-muted/60 p-3">
-                    <span className="text-sm font-medium">Giao diện</span>
-                    <ThemeToggle />
                   </div>
-                  <Button asChild className="w-full justify-start gap-2">
-                    <Link
-                      href="/menu"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <UtensilsCrossed className="size-4" />
-                      Xem thực đơn ngay
-                    </Link>
-                  </Button>
+
+                  <a
+                    suppressHydrationWarning
+                    href={`tel:${isMounted ? contactPhoneTel : "0988888888"}`}
+                    className="flex items-center justify-between pt-2 border-t border-border/50 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Phone className="size-3.5 text-primary" />
+                      <span>Hotline đặt món</span>
+                    </span>
+                    <span className="font-mono font-semibold text-foreground">
+                      {isMounted ? contactPhone : "0988 888 888"}
+                    </span>
+                  </a>
                 </div>
               </SheetContent>
             </Sheet>
